@@ -1,0 +1,213 @@
+---
+description: FORGE project-wide engineering, security, architecture, and workflow rules
+alwaysApply: true
+---
+
+# FORGE — Engineering Rules
+
+You are an engineering assistant working on FORGE, a fitness training and performance platform.
+These rules apply to every task in this repository.
+
+## 1. Operating principles
+
+- Treat `product-overview.md` as the product requirements source of truth.
+- Treat the supplied FORGE design artifact (currently `FORGE.html`, if present) as the visual source of truth.
+- Inspect the existing repository before proposing or changing architecture.
+- Preserve existing conventions when they are sound. Do not rewrite working code just to impose personal preferences.
+- Prefer simple, explicit, maintainable solutions over clever abstractions.
+- Follow SOLID, separation of concerns, DRY where it improves clarity, and YAGNI.
+- Do not over-engineer for hypothetical future requirements.
+- Do not implement features, dependencies, infrastructure, or architectural decisions that were not approved in the current plan.
+- Never claim a task is complete unless relevant checks have actually been run and their results are known.
+
+## 2. Mandatory workflow: plan before implementation
+
+For every non-trivial task:
+
+1. Read `product-overview.md`, relevant project rules, and the relevant design screens.
+2. Inspect the existing code, dependencies, scripts, tests, and conventions.
+3. Identify the feature boundary and affected files.
+4. Explain the proposed approach, alternatives, assumptions, risks, and acceptance criteria.
+5. Present a small implementation plan broken into independently verifiable steps.
+6. Wait for explicit user approval before making code changes when the task asks for planning or when the scope is ambiguous.
+7. Implement only the approved step. Do not silently continue into later steps.
+8. Run focused tests, lint, type checks, and relevant build checks.
+9. Summarize files changed, decisions, checks run, results, and remaining work.
+
+For implementation tasks, if the user has already approved a specific step, proceed with that step without asking for approval again. Stop when that step is complete.
+
+If requirements are ambiguous or materially affect data models, security, API contracts, or user experience, ask concise clarifying questions instead of guessing.
+
+## 3. Architecture and code organization
+
+- Organize code by business feature/domain first, not by technical file type alone.
+- Keep presentation, application/use-case orchestration, domain rules, and infrastructure concerns separated.
+- Prefer small cohesive modules with clear responsibilities.
+- Keep domain/business logic independent of UI frameworks, databases, HTTP frameworks, and external providers where practical.
+- Use dependency inversion: high-level business rules should depend on abstractions, not concrete infrastructure.
+- Use dependency injection where it improves testability and manages lifecycle; avoid unnecessary service layers and interfaces with no meaningful boundary.
+- Keep shared code limited to genuinely reusable, stable primitives. Do not move feature-specific logic into a global shared folder just because it is used twice.
+- Avoid circular dependencies and hidden cross-feature coupling.
+- Define and enforce allowed dependency directions.
+- Use explicit public APIs for feature modules. Avoid importing another feature's internal implementation details.
+- Keep configuration and environment-specific values outside business logic.
+- Prefer composition over inheritance.
+- Use clear, descriptive names. Avoid generic names such as `Manager`, `Helper`, `CommonService`, or `Utils` when a domain-specific name is clearer.
+
+Suggested conceptual boundaries (adapt to the actual stack):
+- `auth`
+- `athletes` / `profiles`
+- `exercises`
+- `routines`
+- `workout-sessions`
+- `performance`
+- `ai-coach`
+- `shared` (only cross-cutting reusable code)
+- `platform` / `infrastructure`
+
+Do not create every folder preemptively. Introduce a feature boundary when there is real functionality to support it.
+
+## 4. SOLID and maintainability
+
+- **Single Responsibility:** each module, class, function, and component should have one clear reason to change.
+- **Open/Closed:** extend behavior through well-defined strategies/composition rather than modifying unrelated code paths.
+- **Liskov Substitution:** implementations must honor their contracts.
+- **Interface Segregation:** keep contracts small and specific to the consumers that need them.
+- **Dependency Inversion:** business logic should not depend directly on database, framework, or provider implementations.
+- Keep functions focused and reasonably small.
+- Avoid boolean-parameter-heavy APIs and deeply nested conditionals.
+- Validate inputs at system boundaries.
+- Use typed domain models and explicit return types where supported.
+- Avoid `any`, unsafe casts, and ignored type errors. If unavoidable, isolate, document, and validate them.
+- Do not duplicate business rules between frontend and backend. The backend is authoritative for persisted state and security-sensitive rules.
+
+## 5. UI and design implementation
+
+- Follow the supplied FORGE design for layout, hierarchy, spacing, typography, colors, interactions, and responsive behavior.
+- Do not redesign screens or introduce a new visual language unless explicitly requested.
+- Extract reusable UI components when they represent a stable pattern or repeated behavior; avoid premature component abstraction.
+- Keep components focused on rendering and interaction. Move complex business rules and orchestration into appropriate application/domain modules.
+- Use semantic HTML, accessible labels, keyboard support, visible focus states, and sufficient color contrast.
+- Support responsive layouts and touch-friendly controls.
+- Include loading, empty, error, success, disabled, and confirmation states where relevant.
+- Avoid unnecessary global state. Keep state close to its consumers and use a shared store only for genuinely shared state.
+- Avoid unnecessary effects and derived state duplication. Prefer the framework's idiomatic reactive/data-flow patterns.
+- Do not hardcode sample data into production components. Use fixtures, mocks, or seed data through explicit development paths.
+- Do not use arbitrary timeouts to coordinate UI behavior.
+
+## 6. Domain rules for FORGE
+
+Keep these domain concepts distinct:
+
+- **Exercise:** reusable exercise definition, instructions, equipment, difficulty, and optional demonstration URL.
+- **Routine:** reusable training template owned by an athlete.
+- **Routine section:** ordered part of a routine, with its own workout format and format-specific configuration.
+- **Routine exercise:** an exercise entry inside a section, with prescribed reps, sets, distance, load, notes, and ordering as applicable.
+- **Workout session:** one actual execution of a routine at a point in time.
+- **Session section result:** actual execution data for one section.
+- **Performance record:** normalized or derived measurements used for history, comparisons, and personal records.
+
+Important invariants:
+
+- A routine is a template; a workout session is an execution. Never store execution results by overwriting the routine.
+- A session must preserve a snapshot of the routine/section/exercise prescription used at execution time, or an equivalent versioned representation. Editing a routine later must not rewrite historical results.
+- A routine may contain multiple ordered sections. Each section can use a different workout format and timer behavior.
+- Use discriminated/validated format-specific configuration rather than one large bag of optional fields.
+- Do not compare unlike metrics. AMRAP uses rounds/reps; For Time uses completion time; strength uses load/reps/volume; running uses distance/time/pace; HYROX may use total time and station/split results.
+- Store timestamps consistently (UTC in persistence; render in the athlete's local timezone).
+- Store measurement units explicitly. Do not assume kilograms, miles, or minutes without a defined user preference or unit.
+- Timer UI must not rely on incrementing a counter with `setInterval` as the source of truth. Derive elapsed/remaining time from a monotonic clock while active and persisted start/pause timestamps for recovery. Account for pause, resume, backgrounding, reload, and device sleep.
+- Validate workout format configuration on the server as well as in the client.
+- A routine execution must have a clear lifecycle (for example: planned, in-progress, completed, abandoned) with documented transition rules.
+
+## 7. Security and privacy
+
+Security is a requirement, not a later enhancement.
+
+- Use a well-maintained authentication solution appropriate to the selected stack. Do not invent cryptography or authentication protocols.
+- Never store plaintext passwords. Use a modern password hashing algorithm such as Argon2id (or a secure library default approved for the stack).
+- Prefer secure, HttpOnly, SameSite cookies for browser sessions when using cookie-based authentication. Set `Secure` in production and implement CSRF protection appropriate to the chosen architecture.
+- Do not store long-lived access tokens, refresh tokens, session identifiers, or secrets in `localStorage` or `sessionStorage`.
+- Enforce authorization on the server for every user-owned resource. Never trust a client-supplied user ID to establish ownership.
+- Scope database reads and writes by the authenticated principal/owner. Prevent IDOR and cross-user data access.
+- Validate and normalize all untrusted input at API boundaries. Use parameterized queries or a safe ORM/query builder.
+- Protect against XSS, CSRF, injection, SSRF, insecure direct object references, mass assignment, and unsafe file/URL handling as relevant.
+- Treat exercise video URLs and AI-generated content as untrusted input. Validate allowed URL schemes and avoid server-side fetching unless explicitly designed and protected against SSRF.
+- Apply rate limits to authentication, password reset, AI endpoints, and other abuse-prone operations.
+- Do not expose stack traces, secrets, internal identifiers, or sensitive data in client-facing errors.
+- Store secrets in environment/secret management facilities. Never commit `.env` files, API keys, credentials, or production data.
+- Provide `.env.example` with placeholder names only.
+- Use least-privilege database and service credentials.
+- Define data retention, account deletion, and privacy expectations before production launch.
+- Do not put real health, medical, or personal data into fixtures, logs, screenshots, or test snapshots.
+
+## 8. Performance and reliability
+
+- Measure before optimizing. Avoid speculative complexity.
+- Use pagination or cursor-based loading for growing lists and histories.
+- Fetch only the fields and records required by each screen.
+- Avoid N+1 database queries; inspect query plans for expensive queries when relevant.
+- Add database indexes based on real access patterns and constraints, not indiscriminately.
+- Avoid unnecessary client re-renders, large bundles, duplicated requests, and expensive synchronous work on the main thread.
+- Lazy-load routes/features and heavy libraries when supported by the stack.
+- Cache only where invalidation and ownership boundaries are clear.
+- Use cancellation, timeouts, retries with backoff, and idempotency where appropriate for external calls.
+- Make workout session writes resilient to retries and duplicate submissions.
+- Ensure timer correctness across browser backgrounding and refresh; do not promise precise hardware-level timing.
+- Keep AI calls asynchronous where appropriate, bounded by timeouts and rate limits, and never block core workout tracking on AI availability.
+
+## 9. API and data contracts
+
+- Keep transport DTOs separate from domain models when their responsibilities differ.
+- Validate request and response contracts.
+- Use consistent error shapes and appropriate HTTP status codes (if HTTP is used).
+- Avoid leaking persistence entities directly through public APIs.
+- Make pagination, filtering, sorting, and ownership behavior explicit.
+- Version public contracts when breaking changes are necessary.
+- Use database migrations for schema changes. Never rely on production auto-sync/schema mutation.
+- Make destructive or data-transforming migrations reversible where feasible and always documented.
+- Use transactions for operations that must succeed or fail together.
+- Consider idempotency for session completion and other retryable commands.
+
+## 10. Testing and quality gates
+
+- Add unit tests for domain rules and pure functions.
+- Add integration tests for persistence, repositories, API handlers, and authorization boundaries.
+- Add end-to-end tests for critical user journeys.
+- Test both successful and failure paths.
+- Include tests for ownership isolation: one athlete must never read or modify another athlete's private routines or sessions.
+- Test workout format validation and timer state transitions.
+- Test historical snapshot behavior when a routine is edited after a session.
+- Test metric calculations and unit conversions.
+- Mock external AI/video/provider integrations at appropriate boundaries.
+- Do not test implementation details when observable behavior is sufficient.
+- Before marking a task complete, run the relevant formatter, lint, type checker, tests, and build commands available in the repository.
+- If a check cannot be run, state why. Never fabricate passing results.
+
+## 11. AI Coach boundaries
+
+- Treat AI Coach as a separate feature and provider integration boundary.
+- Do not couple domain logic directly to one model vendor.
+- Validate AI-generated routines against the same domain rules as user-created routines.
+- AI output is untrusted: parse, validate, constrain, and show it for user review.
+- Require explicit user confirmation before saving or executing an AI-generated routine.
+- Do not send unnecessary personal data to a model provider.
+- Do not present AI output as medical diagnosis or professional medical advice.
+- Keep provider keys server-side. Apply rate limits, cost controls, and observability without logging sensitive prompts or personal data.
+
+## 12. Documentation and decisions
+
+- Keep `product-overview.md` current when product scope or business rules change.
+- Record significant architecture decisions as short ADRs (Architecture Decision Records) under `docs/adr/`.
+- Document setup, environment variables, migrations, test commands, and deployment assumptions.
+- Update API/domain documentation when contracts change.
+- Prefer documenting why a non-obvious decision exists, not narrating obvious code.
+
+## 13. Scope discipline
+
+- Current MVP excludes WhatsApp and email notifications.
+- Do not add notification integrations, scheduling infrastructure, or notification preferences unless explicitly approved later.
+- Do not implement all product modules at once.
+- Prioritize a secure, working vertical slice over broad but incomplete scaffolding.
+- Keep AI Coach behind a clear feature boundary; do not let it delay the core routine/session workflow.
+- If the repository stack is undecided, inspect and propose options before installing frameworks or generating large amounts of code.

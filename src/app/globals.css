@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/*
+  FORGE visual tokens — source: design/FORGE.html
+  Dark-first; light theme overrides via [data-theme="light"].
+*/
+
+:root {
+  color-scheme: dark;
+
+  --forge-accent: #ff5a1f;
+  --forge-ground: #0c0c0e;
+  --forge-surface: #16161a;
+  --forge-raised: #1f1f25;
+  --forge-border: #2a2a32;
+  --forge-text: #f4f2ee;
+  --forge-muted: #a8a6ae;
+  --forge-success: #7be0a4;
+  --forge-success-surface: #12301f;
+  --forge-work: #ff5a1f;
+  --forge-rest: #4cc3e8;
+  --forge-done: #f4f2ee;
+
+  --forge-radius-md: 12px;
+  --forge-radius-lg: 20px;
+  --forge-radius-xl: 28px;
+  --forge-radius-pill: 9999px;
+
+  --forge-space-1: 4px;
+  --forge-space-2: 8px;
+  --forge-space-3: 12px;
+  --forge-space-4: 16px;
+  --forge-space-6: 24px;
+
+  --forge-tap-min: 48px;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --forge-accent: #c93c06;
+  --forge-ground: #f6f4f0;
+  --forge-surface: #ffffff;
+  --forge-raised: #ece8e1;
+  --forge-border: #d9d5cd;
+  --forge-text: #15151a;
+  --forge-muted: #5c5a62;
+  --forge-success: #12301f;
+  --forge-success-surface: #7be0a4;
+  --forge-work: #c93c06;
+  --forge-rest: #4cc3e8;
+  --forge-done: #15151a;
+}
+
+@theme inline {
+  --color-accent: var(--forge-accent);
+  --color-ground: var(--forge-ground);
+  --color-surface: var(--forge-surface);
+  --color-raised: var(--forge-raised);
+  --color-border: var(--forge-border);
+  --color-ink: var(--forge-text);
+  --color-muted: var(--forge-muted);
+  --color-success: var(--forge-success);
+  --color-success-surface: var(--forge-success-surface);
+  --color-work: var(--forge-work);
+  --color-rest: var(--forge-rest);
+  --color-done: var(--forge-done);
+
+  --radius-md: var(--forge-radius-md);
+  --radius-lg: var(--forge-radius-lg);
+  --radius-xl: var(--forge-radius-xl);
+  --radius-pill: var(--forge-radius-pill);
+
+  --spacing-1: var(--forge-space-1);
+  --spacing-2: var(--forge-space-2);
+  --spacing-3: var(--forge-space-3);
+  --spacing-4: var(--forge-space-4);
+  --spacing-6: var(--forge-space-6);
+
+  --font-display:
+    var(--font-barlow-condensed), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    @apply bg-ground text-ink antialiased;
+  }
+
+  body {
+    @apply bg-ground font-body text-ink min-h-dvh;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--forge-accent);
+    outline-offset: 2px;
+  }
+}
