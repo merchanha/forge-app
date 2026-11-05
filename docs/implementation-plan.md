@@ -1,7 +1,7 @@
 # FORGE — Discovery & Implementation Plan
 
 Planning document produced from product, design, and technical discovery.
-**Status:** Architecture and Phase 0 approved. Phase 0 implemented. Awaiting approval before Phase 1.
+**Status:** Architecture and Phase 0–1 approved. Phase 0–1 implemented. Awaiting approval before Phase 2.
 **Approved decisions:** see [`docs/approved-decisions.md`](./approved-decisions.md).
 
 **Sources reviewed:** `START-HERE-PROMPT.md`, `product-overview.md`, `.cursorrules`, `.cursor/rules/forge-engineering.mdc`, `README.md`, `design/FORGE.html`.
@@ -320,12 +320,12 @@ Do **not** wait for 100% coverage before shipping the vertical slice; lock the i
 - **Acceptance:** `dev`/`lint`/`typecheck`/`test` scripts work; tokens match visual system; design file untouched.
 - **Risks:** Next 15 vs 16 proxy/middleware — follow docs at install time.
 
-### Phase 1 — Supabase + Auth + Profile
+### Phase 1 — Supabase + Auth + Profile *(implemented)*
 
 - **Outcome:** Register / login / logout; protected app shell; profile row on signup.
 - **Non-goals:** OAuth (unless approved), full onboarding quiz persistence polish.
 - **DB:** `profiles` + trigger on `auth.users`; RLS.
-- **Security:** SSR cookies, RLS tested with two users.
+- **Security:** SSR cookies, RLS checklist in `docs/security-rls.md` (manual two-user verification).
 - **Acceptance:** Unauthenticated users redirected; owner-only profile read/write.
 
 ### Phase 2 — Exercises

@@ -31,3 +31,11 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - Vitest, Testing Library, Playwright smoke config.
 - Preserve existing design and documentation files.
 - No Supabase connection, schema, auth, or product features in Phase 0.
+
+## Phase 1 engineering
+
+- `@supabase/ssr` cookie sessions; Next.js 16 `proxy.ts` refreshes via `getClaims()`.
+- Email/password only; no Google OAuth.
+- `profiles` table + signup trigger + owner-only RLS.
+- Minimal profile fields: `display_name`, `preferred_units` (default `kg`).
+- Protected `/app` shell; full onboarding quiz deferred.
