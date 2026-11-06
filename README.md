@@ -6,8 +6,8 @@ Fitness training application: create routines, execute format-aware workouts, an
 
 ## Current status
 
-**Phase 1 complete (Supabase + Auth + Profile).**  
-Email/password auth, cookie sessions, `profiles` + RLS, and a protected `/app` shell are in place. Exercises, routines, and workout sessions start in Phase 2+.
+**Phase 2 complete (exercise library).**  
+Email/password auth, cookie sessions, profiles, and a protected `/app` shell are in place. Athletes can create, list, edit, and delete their own exercises, including a private starter set. Routines and workout sessions start in Phase 3+.
 
 Product requirements: [`product-overview.md`](./product-overview.md)  
 Design source of truth: [`design/FORGE.html`](./design/FORGE.html)  
@@ -56,18 +56,16 @@ Fill `.env.local` from **Supabase → Project Settings → API Keys**:
 
 Do **not** put the service role key in `NEXT_PUBLIC_*` or commit `.env.local`.
 
-### Apply the Phase 1 migration
+### Apply migrations once
 
-In the Supabase SQL editor, run the contents of:
+`supabase/migrations/20261104210000_profiles.sql` is already applied and recorded as version `20261104210000`. Do not run it again.
 
-`supabase/migrations/20261104210000_profiles.sql`
+Phase 2 adds `supabase/migrations/20261106193000_exercises.sql`. Apply that new file once:
 
-Or, with the CLI linked to your project:
+- Push the migration and let the Supabase GitHub integration apply it. The integration records the version in `supabase_migrations.schema_migrations` and skips versions that are already recorded.
+- Or, with the CLI linked to this project, run `npx supabase db push` once. A later GitHub sync skips that recorded version.
 
-```bash
-npx supabase link --project-ref <your-project-ref>
-npx supabase db push
-```
+Do not paste the exercises SQL into the SQL editor and also let the integration apply the same unrecorded file. That applies it twice. Do not re-run the profiles migration.
 
 ### Auth settings (local MVP)
 
@@ -118,6 +116,7 @@ FORGE/
 │   ├── app/                # Next.js App Router
 │   ├── features/
 │   │   ├── auth/
+│   │   ├── exercises/
 │   │   └── profiles/
 │   ├── platform/supabase/  # SSR clients + types
 │   └── shared/             # Cross-cutting UI/theme
@@ -127,5 +126,5 @@ FORGE/
 
 ## Phase boundary
 
-**In Phase 1:** Supabase clients, register/login/logout, profiles + RLS, protected `/app`.  
-**Out:** Google OAuth, exercises, routines, sessions/timers, AI Coach, Explore.
+**In Phase 2:** User-owned exercise CRUD, https YouTube/Vimeo demo links, owner-only RLS, and a private eight-exercise starter set at `/app/exercises`.  
+**Out:** Google OAuth, routines, sessions/timers, AI Coach, Explore, hosted video.

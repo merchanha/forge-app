@@ -15,7 +15,7 @@ async function AppHomeContent() {
           Hey {name}
         </h1>
         <p className="text-muted">
-          Auth and profile are live. Routines and workouts arrive in later
+          Your exercise library is ready. Routines and workouts arrive in later
           phases.
         </p>
       </header>
@@ -25,8 +25,14 @@ async function AppHomeContent() {
           Quick links
         </h2>
         <Link
-          href="/app/profile"
+          href="/app/exercises"
           className="bg-accent text-ground inline-flex min-h-12 items-center justify-center rounded-md px-4 font-semibold"
+        >
+          Open exercises
+        </Link>
+        <Link
+          href="/app/profile"
+          className="border-border text-ink inline-flex min-h-12 items-center justify-center rounded-md border px-4 font-semibold"
         >
           Open profile
         </Link>
@@ -37,9 +43,7 @@ async function AppHomeContent() {
 
 export default function AppHomePage() {
   return (
-    <Suspense
-      fallback={<p className="text-muted">Loading your hub…</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Loading your hub…</p>}>
       <AppHomeContent />
     </Suspense>
   );

@@ -1,19 +1,5 @@
 import type { Profile } from "@/platform/supabase/database.types";
-import { createServerSupabaseClient } from "@/platform/supabase/server";
-
-export async function requireUser() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    return { supabase, user: null as null };
-  }
-
-  return { supabase, user };
-}
+import { requireUser } from "@/platform/supabase/require-user";
 
 export async function getOwnProfile(): Promise<Profile | null> {
   const { supabase, user } = await requireUser();

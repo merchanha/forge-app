@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
-import { requireUser } from "@/features/profiles/queries";
+import { requireUser } from "@/platform/supabase/require-user";
 
 async function HomeRedirect() {
   let signedIn = false;

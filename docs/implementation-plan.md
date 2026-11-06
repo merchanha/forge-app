@@ -1,7 +1,7 @@
 # FORGE — Discovery & Implementation Plan
 
 Planning document produced from product, design, and technical discovery.
-**Status:** Architecture and Phase 0–1 approved. Phase 0–1 implemented. Awaiting approval before Phase 2.
+**Status:** Phase 0–2 implemented. Awaiting approval before Phase 3.
 **Approved decisions:** see [`docs/approved-decisions.md`](./approved-decisions.md).
 
 **Sources reviewed:** `START-HERE-PROMPT.md`, `product-overview.md`, `.cursorrules`, `.cursor/rules/forge-engineering.mdc`, `README.md`, `design/FORGE.html`.
@@ -328,11 +328,14 @@ Do **not** wait for 100% coverage before shipping the vertical slice; lock the i
 - **Security:** SSR cookies, RLS checklist in `docs/security-rls.md` (manual two-user verification).
 - **Acceptance:** Unauthenticated users redirected; owner-only profile read/write.
 
-### Phase 2 — Exercises
+### Phase 2 — Exercises *(implemented)*
 
-- **Outcome:** CRUD basic exercise library + URL validation.
-- **Non-goals:** Hosted video, huge curated catalog.
-- **Acceptance:** Ownership isolation tests green.
+- **Outcome:** User-owned exercise CRUD inside `/app/exercises`, with shared Zod validation and a database check for https YouTube or Vimeo demo URLs.
+- **Starter library:** eight private copies per athlete, inserted by `seed_starter_exercises` from the signup trigger. Existing profiles with no exercises are backfilled once by `supabase/migrations/20261106193000_exercises.sql`. There is no shared editable catalog row.
+- **Non-goals:** Hosted video, a large catalog, routines, sessions, timers, Explore, Google OAuth, AI Coach.
+- **DB:** `exercises` plus owner-only RLS. Do not edit or re-apply `20261104210000_profiles.sql`.
+- **Security:** Server Actions call `getUser()` and write `user_id` from that session. Policies use `(select auth.uid())` and `to authenticated`.
+- **Acceptance:** Zod unit tests cover field and demo-URL rules. The two-user RLS checklist in `docs/security-rls.md` is run after the migration is applied once. Lint, typecheck, unit tests, and the production build pass.
 
 ### Phase 3 — Routines + multi-section builder (mobile-first UI)
 

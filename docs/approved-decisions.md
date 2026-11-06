@@ -39,3 +39,10 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - `profiles` table + signup trigger + owner-only RLS.
 - Minimal profile fields: `display_name`, `preferred_units` (default `kg`).
 - Protected `/app` shell; full onboarding quiz deferred.
+
+## Phase 2 engineering
+
+- Exercises live in `src/features/exercises` and `public.exercises`.
+- Each athlete receives a private copy of eight starter exercises on signup. Existing athletes are backfilled once.
+- Demo media is an optional https YouTube or Vimeo URL. The server does not fetch it.
+- Routines, sessions, timers, Explore, Google OAuth, and AI Coach stay out of this phase.

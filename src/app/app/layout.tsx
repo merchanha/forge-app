@@ -2,7 +2,7 @@ import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { requireUser } from "@/features/profiles/queries";
+import { requireUser } from "@/platform/supabase/require-user";
 
 async function AuthenticatedShell({ children }: { children: ReactNode }) {
   let user: Awaited<ReturnType<typeof requireUser>>["user"] = null;
@@ -24,9 +24,12 @@ async function AuthenticatedShell({ children }: { children: ReactNode }) {
         >
           FORGE
         </Link>
-        <nav className="flex items-center gap-4 text-sm font-semibold">
+        <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm font-semibold">
           <Link href="/app" className="text-muted hover:text-ink">
             Hub
+          </Link>
+          <Link href="/app/exercises" className="text-muted hover:text-ink">
+            Exercises
           </Link>
           <Link href="/app/profile" className="text-muted hover:text-ink">
             Profile
