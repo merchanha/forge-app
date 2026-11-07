@@ -377,9 +377,13 @@ Do **not** wait for 100% coverage before shipping the vertical slice; lock the i
 - **Security:** No new tables or policies. Timer math remains pure/unit-tested; Server Actions and owner-only RLS unchanged.
 - **Acceptance:** Pause/resume/refresh restores correct remaining/elapsed/phase for interval formats; all nine formats have live UX; lint, typecheck, unit tests, and production build pass.
 
-### Phase 8 — Explore seed (optional)
+### Phase 8 — Explore seed (curated catalog) *(implemented)*
 
-- Only if curated templates are wanted in MVP.
+- **Outcome:** Small curated Explore catalog (Helen-style, HYROX skills, Threshold run). Athletes browse `/app/explore` and **copy/save** into My Training as a private owned routine (new IDs). Explore appears in app nav.
+- **Non-goals:** Marketplace/community catalog, AI Coach, Google OAuth, editable system rows.
+- **DB:** `explore_templates` / `explore_sections` / `explore_movements` in `supabase/migrations/20261107160000_explore_catalog.sql`, authenticated select-only RLS, and `copy_explore_template` invoker RPC. Confirm Phase 1–6 versions are recorded (Phase 3–6 files are idempotent) before/with this push. Do not edit earlier migrations.
+- **Security:** Catalog is readable by authenticated users only; no user insert/update/delete. Copy writes `user_id` from `auth.uid()` and find-or-creates owned exercises by exact name.
+- **Acceptance:** Save creates a private routine copy; catalog unchanged; empty/loading/error polish; two-user RLS checklist in `docs/security-rls.md`; lint, typecheck, unit tests, and production build pass.
 
 ### Phase 9 — AI Coach (explicitly later)
 
@@ -408,7 +412,7 @@ Do **not** wait for 100% coverage before shipping the vertical slice; lock the i
 ### Open questions *(need decisions before or during early phases)*
 
 1. Email/password only for Phase 1, or Google OAuth too?
-2. Is **Explore** in MVP or hide the tab until later?
+2. Is **Explore** in MVP or hide the tab until later? **Decided (Phase 8): in MVP as a small curated catalog.**
 3. Onboarding: persist full quiz in Phase 1, or minimal profile then enhance?
 4. Default units: kg or lb?
 5. After complete, are results editable or append-only?

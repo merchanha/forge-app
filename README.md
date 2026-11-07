@@ -6,8 +6,8 @@ Fitness training application: create routines, execute format-aware workouts, an
 
 ## Current status
 
-**Phase 7 complete (remaining live timer formats + polish).**  
-Email/password auth, cookie sessions, profiles, exercises, routines, workout sessions, history/compare, and profile prefs/theme are in place. Live timers cover all nine formats (including EMOM, Tabata, Intervals, RFT, Running) with timestamp-based pause/resume/refresh survival and manual multi-section advance. Explore, Google OAuth, and AI Coach remain later.
+**Phase 8 complete (Explore curated catalog).**  
+Email/password auth, cookie sessions, profiles, exercises, routines, workout sessions, history/compare, profile prefs/theme, and live timers for all nine formats are in place. Explore offers a small curated catalog; saving copies a template into the athlete’s private My Training routines. Google OAuth and AI Coach remain later.
 
 Product requirements: [`product-overview.md`](./product-overview.md)  
 Design source of truth: [`design/FORGE.html`](./design/FORGE.html)  
@@ -66,8 +66,9 @@ Expected versions in `supabase_migrations.schema_migrations`:
 - `20261107010000` / `workout_sessions`
 - `20261107120000` / `performance_history` (Phase 5 index)
 - `20261107140000` / `profile_prefs` (Phase 6 theme + onboarding fields)
+- `20261107160000` / `explore_catalog` (Phase 8 curated templates)
 
-If earlier Phase 3–5 versions are missing but tables/indexes already exist, push the repo (preferred) or run `npx supabase db push` once. Phase 3 and Phase 4 migrations are **idempotent** and will record themselves; then Phase 5/6 apply. Do not re-run `profiles` or `exercises` migrations. Do not paste migration SQL into the editor and also let the integration apply the same unrecorded file.
+If earlier Phase 3–6 versions are missing but tables/indexes already exist, push the repo (preferred) or run `npx supabase db push` once. Phase 3–6 migrations are **idempotent** and will record themselves; then Phase 8 applies. Do not re-run `profiles` or `exercises` migrations. Do not paste migration SQL into the editor and also let the integration apply the same unrecorded file.
 
 ### Auth settings (local MVP)
 
@@ -119,6 +120,7 @@ FORGE/
 │   ├── features/
 │   │   ├── auth/
 │   │   ├── exercises/
+│   │   ├── explore/        # Curated catalog → copy to My Training
 │   │   ├── performance/    # History, compares, result edits
 │   │   ├── profiles/       # Prefs, theme, app shell nav
 │   │   ├── routines/
@@ -131,5 +133,5 @@ FORGE/
 
 ## Phase boundary
 
-**In Phase 7:** Live timer UX for EMOM, Tabata, Intervals, Rounds for Time, and Running; multi-section advance polish; session empty/error/loading polish.  
-**Out:** Google OAuth, AI Coach, Explore, hosted video, social/payments.
+**In Phase 8:** Curated Explore catalog, copy/save into private routines, Explore nav entry.  
+**Out:** Google OAuth, AI Coach, marketplace/community catalog, hosted video, social/payments.

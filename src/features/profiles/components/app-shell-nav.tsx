@@ -11,6 +11,11 @@ const navItems = [
     match: (path: string) => path.startsWith("/app/routines"),
   },
   {
+    href: "/app/explore",
+    label: "Explore",
+    match: (path: string) => path.startsWith("/app/explore"),
+  },
+  {
     href: "/app/history",
     label: "Progress",
     match: (path: string) =>

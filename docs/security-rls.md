@@ -140,6 +140,26 @@ No schema or policy changes. All nine formats use the same owner-only `workout_s
 
 Manual two-user session checks from Phase 4 still apply. Optionally also start a multi-section routine that includes EMOM or Tabata, confirm WORK/REST labels and that a mid-section refresh restores the correct phase remaining time.
 
+## Explore catalog (Phase 8)
+
+| Policy | Intent |
+|---|---|
+| `explore_templates_select_authenticated` | Authenticated users can read curated templates |
+| `explore_sections_select_authenticated` | Authenticated users can read curated sections |
+| `explore_movements_select_authenticated` | Authenticated users can read curated movements |
+| No insert/update/delete policies | Users cannot mutate system catalog rows |
+
+`copy_explore_template(uuid)` is `security invoker`, executable by `authenticated` only, and writes the new routine / sections / exercises with `user_id = auth.uid()`. Missing exercises are created as private copies by exact name. Format configs remain constrained by `is_valid_format_config` on catalog sections.
+
+## Manual two-user test — Explore
+
+Run this after Phase 1–6 versions are recorded and `20261107160000_explore_catalog.sql` has been applied once. Do not re-apply earlier migrations.
+
+1. Sign in as User A. Open `/app/explore`, open Helen-style (or another seed), and Save to My Training. Confirm a new private routine appears under My Training with new IDs and matching prescription.
+2. Confirm A cannot insert/update/delete rows in `explore_templates`, `explore_sections`, or `explore_movements` (0 rows / policy denial).
+3. As User B, confirm B sees the same catalog, B’s Save creates B-owned routines only, and B cannot read A’s copied routine.
+4. Sign out; confirm `/app/explore` redirects to `/login`.
+
 ## Session rules
 
 - Never put the service role key in client bundles or `NEXT_PUBLIC_*`.

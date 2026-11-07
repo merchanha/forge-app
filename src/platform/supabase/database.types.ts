@@ -254,6 +254,120 @@ export type Database = {
         };
         Relationships: [];
       };
+      explore_templates: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          description: string;
+          category: RoutineCategory;
+          tags: string[];
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          description?: string;
+          category?: RoutineCategory;
+          tags?: string[];
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          name?: string;
+          description?: string;
+          category?: RoutineCategory;
+          tags?: string[];
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      explore_sections: {
+        Row: {
+          id: string;
+          template_id: string;
+          sort_order: number;
+          name: string;
+          format: WorkoutFormat;
+          format_config: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          template_id: string;
+          sort_order: number;
+          name: string;
+          format: WorkoutFormat;
+          format_config: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          template_id?: string;
+          sort_order?: number;
+          name?: string;
+          format?: WorkoutFormat;
+          format_config?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      explore_movements: {
+        Row: {
+          id: string;
+          section_id: string;
+          sort_order: number;
+          exercise_name: string;
+          exercise_description: string;
+          movement_category: ExerciseMovementCategory;
+          equipment: string;
+          quantity: number;
+          quantity_unit: QuantityUnit;
+          load_value: number | null;
+          load_unit: PreferredUnits | null;
+          notes: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          section_id: string;
+          sort_order: number;
+          exercise_name: string;
+          exercise_description?: string;
+          movement_category: ExerciseMovementCategory;
+          equipment: string;
+          quantity: number;
+          quantity_unit: QuantityUnit;
+          load_value?: number | null;
+          load_unit?: PreferredUnits | null;
+          notes?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          section_id?: string;
+          sort_order?: number;
+          exercise_name?: string;
+          exercise_description?: string;
+          movement_category?: ExerciseMovementCategory;
+          equipment?: string;
+          quantity?: number;
+          quantity_unit?: QuantityUnit;
+          load_value?: number | null;
+          load_unit?: PreferredUnits | null;
+          notes?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       workout_sessions: {
         Row: {
           id: string;
@@ -364,6 +478,10 @@ export type Database = {
         Args: { source_id: string };
         Returns: string;
       };
+      copy_explore_template: {
+        Args: { template_id: string };
+        Returns: string;
+      };
     };
     Enums: {
       preferred_units: PreferredUnits;
@@ -392,3 +510,9 @@ export type WorkoutSession =
   Database["public"]["Tables"]["workout_sessions"]["Row"];
 export type SessionSectionResult =
   Database["public"]["Tables"]["session_section_results"]["Row"];
+export type ExploreTemplate =
+  Database["public"]["Tables"]["explore_templates"]["Row"];
+export type ExploreSection =
+  Database["public"]["Tables"]["explore_sections"]["Row"];
+export type ExploreMovement =
+  Database["public"]["Tables"]["explore_movements"]["Row"];

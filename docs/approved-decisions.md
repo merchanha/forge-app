@@ -13,7 +13,7 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 ## Product decisions (Phase 0 approval)
 
 1. **Auth:** Email/password initially. Google OAuth later.
-2. **Explore:** Out of MVP for now (hide/defer the Explore tab).
+2. **Explore:** In MVP as a small curated catalog. Saving copies into the athlete’s private routines (new IDs); catalog rows are read-only for users.
 3. **Onboarding:** Basic profile first; expand onboarding later.
 4. **Units:** Default **KG**, with option to switch to LB.
 5. **Results:** Users can edit saved workout results.
@@ -92,3 +92,11 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - EMOM / Tabata / Intervals derive WORK / REST / DONE (and interval/round index) from active elapsed ms + format config. UI may refresh on an interval; elapsed remains timestamp-based.
 - Multi-section sessions stay manual: next-section preview on the advance control; section clock resets via persisted `current_section_started_at`.
 - No schema migration in this phase. Explore, Google OAuth, and AI Coach stay out.
+
+## Phase 8 engineering
+
+- Explore lives in `src/features/explore` and `public.explore_templates` / `explore_sections` / `explore_movements`.
+- Catalog is a small curated seed (Helen-style, HYROX skills, Threshold run). Not a marketplace or community catalog.
+- Authenticated athletes may `select` catalog rows only. No user insert/update/delete on system rows.
+- `copy_explore_template` creates a private owned routine (new IDs), find-or-creating exercises by exact name from the athlete’s library.
+- Explore appears in app nav. Google OAuth and AI Coach stay out.
