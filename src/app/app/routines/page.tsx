@@ -26,15 +26,40 @@ function isCategory(value: string | undefined): value is RoutineCategory {
   );
 }
 
-async function RoutineList({
-  query,
-  category,
-  includeArchived,
+function FilterChip({
+  href,
+  label,
+  active,
 }: {
-  query: string;
-  category: RoutineCategory | "all";
-  includeArchived: boolean;
+  href: string;
+  label: string;
+  active: boolean;
 }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex min-h-12 items-center justify-center rounded-full border px-4 text-sm font-semibold"
+      style={{
+        background: active ? "#FF5A1F" : "#16161A",
+        color: active ? "#0C0C0E" : "#F4F2EE",
+        borderColor: active ? "#FF5A1F" : "#2A2A32",
+      }}
+    >
+      {label}
+    </Link>
+  );
+}
+
+async function RoutinesPageContent({
+  searchParams,
+}: {
+  searchParams: RoutinesPageProps["searchParams"];
+}) {
+  const params = await searchParams;
+  const query = params.q?.trim() ?? "";
+  const category = isCategory(params.category) ? params.category : "all";
+  const includeArchived = params.archived === "1";
+
   let routines: Awaited<ReturnType<typeof listOwnRoutines>> = [];
   try {
     routines = await listOwnRoutines({
@@ -50,64 +75,6 @@ async function RoutineList({
     );
   }
 
-  if (routines.length === 0) {
-    return (
-      <div className="border-border bg-surface flex flex-col gap-4 rounded-lg border px-4 py-6">
-        <p className="text-muted">
-          {query || category !== "all"
-            ? "Nothing matches. Clear the search or build a routine for this discipline."
-            : "No routines yet. Create one to start My Training."}
-        </p>
-        <Link
-          href="/app/routines/new"
-          className="bg-accent text-ground inline-flex min-h-12 items-center justify-center rounded-md px-4 font-semibold"
-        >
-          Create Routine
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <ul className="flex flex-col gap-3">
-      {routines.map((routine) => (
-        <li
-          key={routine.id}
-          className="border-border bg-surface flex items-start gap-3 rounded-lg border px-4 py-3"
-        >
-          <Link
-            href={`/app/routines/${routine.id}`}
-            className="flex min-h-14 min-w-0 flex-1 flex-col justify-center gap-1"
-          >
-            <span className="font-semibold">
-              {routine.is_favorite ? "★ " : ""}
-              {routine.name}
-            </span>
-            <span className="text-muted text-xs">
-              {routineCategoryLabels[routine.category]} ·{" "}
-              {routine.section_count}{" "}
-              {routine.section_count === 1 ? "section" : "sections"}
-              {routine.archived_at ? " · Archived" : ""}
-            </span>
-          </Link>
-          <RoutineListActions
-            routineId={routine.id}
-            routineName={routine.name}
-            isFavorite={routine.is_favorite}
-            isArchived={routine.archived_at != null}
-          />
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-export default async function RoutinesPage({ searchParams }: RoutinesPageProps) {
-  const params = await searchParams;
-  const query = params.q?.trim() ?? "";
-  const category = isCategory(params.category) ? params.category : "all";
-  const includeArchived = params.archived === "1";
-
   return (
     <main className="flex flex-col gap-6">
       <header className="flex flex-col gap-4">
@@ -119,7 +86,7 @@ export default async function RoutinesPage({ searchParams }: RoutinesPageProps) 
             Routines
           </h1>
           <p className="text-muted">
-            Build reusable templates. Sessions and timers arrive in Phase 4.
+            Build reusable templates, then start a session from the list.
           </p>
         </div>
         <Link
@@ -173,37 +140,60 @@ export default async function RoutinesPage({ searchParams }: RoutinesPageProps) 
         ) : null}
       </form>
 
-      <Suspense fallback={<p className="text-muted">Loading routines…</p>}>
-        <RoutineList
-          query={query}
-          category={category}
-          includeArchived={includeArchived}
-        />
-      </Suspense>
+      {routines.length === 0 ? (
+        <div className="border-border bg-surface flex flex-col gap-4 rounded-lg border px-4 py-6">
+          <p className="text-muted">
+            {query || category !== "all"
+              ? "Nothing matches. Clear the search or build a routine for this discipline."
+              : "No routines yet. Create one to start My Training."}
+          </p>
+          <Link
+            href="/app/routines/new"
+            className="bg-accent text-ground inline-flex min-h-12 items-center justify-center rounded-md px-4 font-semibold"
+          >
+            Create Routine
+          </Link>
+        </div>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {routines.map((routine) => (
+            <li
+              key={routine.id}
+              className="border-border bg-surface flex items-start gap-3 rounded-lg border px-4 py-3"
+            >
+              <Link
+                href={`/app/routines/${routine.id}`}
+                className="flex min-h-14 min-w-0 flex-1 flex-col justify-center gap-1"
+              >
+                <span className="font-semibold">
+                  {routine.is_favorite ? "★ " : ""}
+                  {routine.name}
+                </span>
+                <span className="text-muted text-xs">
+                  {routineCategoryLabels[routine.category]} ·{" "}
+                  {routine.section_count}{" "}
+                  {routine.section_count === 1 ? "section" : "sections"}
+                  {routine.archived_at ? " · Archived" : ""}
+                </span>
+              </Link>
+              <RoutineListActions
+                routineId={routine.id}
+                routineName={routine.name}
+                isFavorite={routine.is_favorite}
+                isArchived={routine.archived_at != null}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }
 
-function FilterChip({
-  href,
-  label,
-  active,
-}: {
-  href: string;
-  label: string;
-  active: boolean;
-}) {
+export default function RoutinesPage({ searchParams }: RoutinesPageProps) {
   return (
-    <Link
-      href={href}
-      className="inline-flex min-h-12 items-center justify-center rounded-full border px-4 text-sm font-semibold"
-      style={{
-        background: active ? "#FF5A1F" : "#16161A",
-        color: active ? "#0C0C0E" : "#F4F2EE",
-        borderColor: active ? "#FF5A1F" : "#2A2A32",
-      }}
-    >
-      {label}
-    </Link>
+    <Suspense fallback={<p className="text-muted">Loading routines…</p>}>
+      <RoutinesPageContent searchParams={searchParams} />
+    </Suspense>
   );
 }

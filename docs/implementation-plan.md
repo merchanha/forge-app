@@ -1,7 +1,7 @@
 # FORGE — Discovery & Implementation Plan
 
 Planning document produced from product, design, and technical discovery.
-**Status:** Phase 0–4 implemented. Awaiting approval before Phase 5.
+**Status:** Phase 0–5 implemented. Awaiting approval before Phase 6.
 **Approved decisions:** see [`docs/approved-decisions.md`](./approved-decisions.md).
 
 **Sources reviewed:** `START-HERE-PROMPT.md`, `product-overview.md`, `.cursorrules`, `.cursor/rules/forge-engineering.mdc`, `README.md`, `design/FORGE.html`.
@@ -353,11 +353,13 @@ Do **not** wait for 100% coverage before shipping the vertical slice; lock the i
 - **Security:** Server Actions call `getUser()` and write `user_id` from that session. Child rows are owner-scoped via denormalized `user_id` and composite FKs. Timer math is unit-tested as pure functions.
 - **Acceptance:** Refresh mid-AMRAP restores correct remaining/elapsed; template edit after complete does not change history; two-user RLS checklist in `docs/security-rls.md`; lint, typecheck, unit tests, and production build pass.
 
-### Phase 5 — Results, history, basic comparisons
+### Phase 5 — Results, history, basic comparisons *(implemented)*
 
-- **Outcome:** Save/discard flow; history list; metric-aware compare for repeat For Time / AMRAP / strength load.
+- **Outcome:** Save/discard messaging on review; `/app/history` list; open past sessions; edit completed results; metric-aware compare for repeat For Time / AMRAP / strength volume with PR markers.
 - **Non-goals:** Fancy charts parity with desktop Progress, automatic “Fran” entity graph.
-- **Acceptance:** PR badge only when same metric + comparable context; unlike metrics never ranked.
+- **DB:** Index-only migration `supabase/migrations/20261107120000_performance_history.sql`. Confirm Phase 3 (`20261106223000`) and Phase 4 (`20261107010000`) are recorded in `schema_migrations` before or as part of the same push (those files are idempotent). Do not re-apply profiles or exercises migrations.
+- **Security:** Server Actions call `getUser()`; owner-only RLS unchanged on sessions/results; history and edits stay user-scoped. Comparison helpers are unit-tested pure functions in `src/features/performance`.
+- **Acceptance:** PR badge only when same metric + comparable context; unlike metrics never ranked; template edits leave snapshots unchanged; two-user RLS checklist in `docs/security-rls.md`; lint, typecheck, unit tests, and production build pass.
 
 ### Phase 6 — Profile prefs, theme, responsive desktop layouts
 

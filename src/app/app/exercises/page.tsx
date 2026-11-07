@@ -45,7 +45,7 @@ async function ExerciseList() {
   );
 }
 
-export default function ExercisesPage() {
+async function ExercisesPageContent() {
   return (
     <main className="flex flex-col gap-6">
       <header className="flex flex-col gap-4">
@@ -66,9 +66,15 @@ export default function ExercisesPage() {
           New exercise
         </Link>
       </header>
-      <Suspense fallback={<p className="text-muted">Loading exercises…</p>}>
-        <ExerciseList />
-      </Suspense>
+      <ExerciseList />
     </main>
+  );
+}
+
+export default function ExercisesPage() {
+  return (
+    <Suspense fallback={<p className="text-muted">Loading exercises…</p>}>
+      <ExercisesPageContent />
+    </Suspense>
   );
 }

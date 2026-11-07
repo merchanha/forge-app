@@ -65,3 +65,13 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - Live timer UX in this phase: AMRAP, For Time, Strength, Custom. Other formats show prescription + manual advance.
 - Multi-section sessions advance manually. Post-workout review reads the snapshot + section results only.
 - Explore, Google OAuth, history/compare/PRs, AI Coach, and desktop timer parity stay out of this phase.
+
+## Phase 5 engineering
+
+- History and metric-aware comparisons live in `src/features/performance`. Reuse `workout-sessions` public queries/validation only; do not import another feature’s internals.
+- Historical display always reads `routine_snapshot` + `session_section_results`, never the live routine template.
+- Completed results and notes are editable after completion. Edits never mutate `routine_snapshot`.
+- Comparisons are metric-aware and context-gated: For Time (completion time), AMRAP (rounds + reps within the same duration), Strength (volume with the same load unit). Unlike metrics are never ranked.
+- PR markers appear only when the metric family and prescription context are compatible (same format config context + same scaling).
+- Matching is practical and routine-based (`routine_id`); there is no Fran/benchmark entity graph.
+- Explore, Google OAuth, AI Coach, remaining live timers, and desktop Progress chart parity stay out of this phase.

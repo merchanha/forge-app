@@ -615,6 +615,7 @@ export async function completeSessionAction(
 
   revalidatePath(`/app/sessions/${session.id}`);
   revalidatePath(`/app/sessions/${session.id}/review`);
+  revalidatePath("/app/history");
   redirect(`/app/sessions/${session.id}/review`);
 }
 

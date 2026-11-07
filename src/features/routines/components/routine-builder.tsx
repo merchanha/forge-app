@@ -79,8 +79,12 @@ type RoutineBuilderProps = {
   initial?: RoutineBuilderInitial;
 };
 
-function createClientId() {
-  return crypto.randomUUID();
+/** Deterministic draft ids — avoids crypto.randomUUID during Cache Components prerender. */
+let draftIdSeq = 0;
+
+function createClientId(prefix = "draft"): string {
+  draftIdSeq += 1;
+  return `${prefix}-${draftIdSeq}`;
 }
 
 function createSection(
@@ -88,7 +92,7 @@ function createSection(
   name = "New section",
 ): DraftSection {
   return {
-    clientId: createClientId(),
+    clientId: createClientId("section"),
     name,
     format,
     formatConfig: defaultFormatConfig(format),
@@ -100,16 +104,24 @@ function toDraftSections(
   initial?: RoutineBuilderInitial,
 ): DraftSection[] {
   if (!initial || initial.sections.length === 0) {
-    return [createSection("amrap", "Metcon")];
+    return [
+      {
+        clientId: "section-0",
+        name: "Metcon",
+        format: "amrap",
+        formatConfig: defaultFormatConfig("amrap"),
+        exercises: [],
+      },
+    ];
   }
 
-  return initial.sections.map((section) => ({
-    clientId: createClientId(),
+  return initial.sections.map((section, sectionIndex) => ({
+    clientId: `section-${sectionIndex}`,
     name: section.name,
     format: section.format,
     formatConfig: section.formatConfig,
-    exercises: section.exercises.map((exercise) => ({
-      clientId: createClientId(),
+    exercises: section.exercises.map((exercise, exerciseIndex) => ({
+      clientId: `section-${sectionIndex}-ex-${exerciseIndex}`,
       ...exercise,
     })),
   }));

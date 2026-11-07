@@ -15,8 +15,8 @@ async function AppHomeContent() {
           Hey {name}
         </h1>
         <p className="text-muted">
-          Build a routine, start a session, and finish with a review. History and
-          comparisons come next.
+          Build a routine, run a session, then review history with metric-aware
+          comparisons.
         </p>
       </header>
 
@@ -29,6 +29,12 @@ async function AppHomeContent() {
           className="bg-accent text-ground inline-flex min-h-12 items-center justify-center rounded-md px-4 font-semibold"
         >
           Open My Training
+        </Link>
+        <Link
+          href="/app/history"
+          className="border-border text-ink inline-flex min-h-12 items-center justify-center rounded-md border px-4 font-semibold"
+        >
+          Open history
         </Link>
         <Link
           href="/app/exercises"

@@ -6,8 +6,8 @@ Fitness training application: create routines, execute format-aware workouts, an
 
 ## Current status
 
-**Phase 4 complete (workout sessions + reliable timer).**  
-Email/password auth, cookie sessions, profiles, exercises, and routines are in place. Athletes can start a session from a saved routine, freeze an immutable routine snapshot, run live timers for AMRAP / For Time / Strength / Custom, pause/resume/refresh safely, advance sections manually, finish or discard, and review the completed session. Full history/compare/PRs start in Phase 5.
+**Phase 5 complete (results, history, basic comparisons).**  
+Email/password auth, cookie sessions, profiles, exercises, routines, and workout sessions are in place. Athletes can finish a session, review snapshot + results, edit saved results later, browse completed history, and see metric-aware deltas / PR markers for compatible For Time, AMRAP, and Strength repeats. Desktop Progress charts, Explore, Google OAuth, and AI Coach remain later.
 
 Product requirements: [`product-overview.md`](./product-overview.md)  
 Design source of truth: [`design/FORGE.html`](./design/FORGE.html)  
@@ -58,15 +58,15 @@ Do **not** put the service role key in `NEXT_PUBLIC_*` or commit `.env.local`.
 
 ### Apply migrations once
 
-These versions should already be recorded in `supabase_migrations.schema_migrations` on the linked project. Do not re-run them:
+Expected versions in `supabase_migrations.schema_migrations`:
 
 - `20261104210000` / `profiles`
 - `20261106193000` / `exercises`
 - `20261106223000` / `routines`
+- `20261107010000` / `workout_sessions`
+- `20261107120000` / `performance_history` (Phase 5 index)
 
-Phase 3 (`20261106223000`) and Phase 4 (`20261107010000`) migrations are **idempotent**. If the linked project already has those tables/types from an out-of-band apply, a push still succeeds and the GitHub integration records the versions.
-
-Apply pending migrations by pushing to GitHub (preferred) or running `npx supabase db push` once against the linked project. Do not re-run `profiles` or `exercises` migrations. Do not paste migration SQL into the editor and also let the integration apply the same unrecorded file.
+If the linked project only has profiles + exercises recorded but Phase 3/4 tables already exist, push the repo (preferred) or run `npx supabase db push` once. Phase 3 and Phase 4 migrations are **idempotent** and will record themselves; then Phase 5 adds the history index. Do not re-run `profiles` or `exercises` migrations. Do not paste migration SQL into the editor and also let the integration apply the same unrecorded file.
 
 ### Auth settings (local MVP)
 
@@ -118,6 +118,7 @@ FORGE/
 │   ├── features/
 │   │   ├── auth/
 │   │   ├── exercises/
+│   │   ├── performance/    # History, compares, result edits
 │   │   ├── profiles/
 │   │   ├── routines/
 │   │   └── workout-sessions/
@@ -129,5 +130,5 @@ FORGE/
 
 ## Phase boundary
 
-**In Phase 4:** Start a workout from a saved routine, immutable JSONB snapshot, live timer UX for AMRAP / For Time / Strength / Custom, pause/resume/refresh recovery, manual section advance, complete or abandon, post-workout review, owner-only RLS.  
-**Out:** Full history/compare/PRs, EMOM/Tabata/Intervals/Running/RFT live timers, Google OAuth, AI Coach, Explore, hosted video, desktop timer parity.
+**In Phase 5:** Completed-session history, post-workout review polish (template unchanged messaging), edit saved results, metric-aware For Time / AMRAP / Strength compares with PR markers, owner-only RLS.  
+**Out:** Desktop Progress charts, Fran entity graph, EMOM/Tabata/Intervals/Running/RFT live timers, Google OAuth, AI Coach, Explore, hosted video.

@@ -9,6 +9,7 @@ import {
 import type { WorkoutSessionDetail } from "@/features/workout-sessions/queries";
 import { formatClockMs } from "@/features/workout-sessions/timer";
 import type { SectionResult } from "@/features/workout-sessions/validation";
+import { formatUtcDateTime } from "@/shared/datetime/format";
 
 function resultSummary(result: SectionResult): string {
   switch (result.format) {
@@ -65,7 +66,7 @@ export function SessionReview({ session }: { session: WorkoutSessionDetail }) {
         <p className="text-muted mt-1 text-sm">
           Scaling: {session.scaling === "rx" ? "Rx" : "Scaled"}
           {session.completedAt
-            ? ` · Finished ${new Date(session.completedAt).toLocaleString()}`
+            ? ` · Finished ${formatUtcDateTime(session.completedAt)}`
             : null}
         </p>
       </div>

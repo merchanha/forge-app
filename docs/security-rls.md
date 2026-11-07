@@ -87,6 +87,23 @@ Run this after `20261107010000_workout_sessions.sql` has been applied once. Conf
 4. As User B, confirm B cannot select A’s `workout_sessions` or `session_section_results` rows, and direct update/delete of A’s session id affects 0 rows.
 5. Sign out; confirm `/app/sessions/<id>` redirects to `/login`.
 
+## Performance history (Phase 5)
+
+No new user-owned tables. History and compares read `workout_sessions` + `session_section_results` under the same owner-only policies. Completed-result edits update those rows only for `status = completed` and never mutate `routine_snapshot`.
+
+Index added by `20261107120000_performance_history.sql`:
+
+- `workout_sessions_user_routine_completed_idx` on `(user_id, routine_id, completed_at desc)` where `status = 'completed'`
+
+## Manual two-user test — history and edited results
+
+Run this after Phase 3 and Phase 4 versions are recorded and `20261107120000_performance_history.sql` has been applied once. Do not re-apply earlier migrations.
+
+1. Sign in as User A. Complete at least two sessions of the same For Time (or AMRAP / Strength) routine with compatible prescriptions. Open `/app/history` and confirm both appear with a metric-aware delta and a PR marker only on the best compatible score.
+2. Open a completed session review, edit a section result and notes, save, and confirm the snapshot prescription is unchanged. Edit the live routine template and confirm history still shows the frozen snapshot.
+3. As User B, confirm `/app/history` does not list A’s sessions, opening A’s review URL fails or shows not found, and direct update of A’s `session_section_results` id affects 0 rows.
+4. Sign out; confirm `/app/history` redirects to `/login`.
+
 ## Session rules
 
 - Never put the service role key in client bundles or `NEXT_PUBLIC_*`.

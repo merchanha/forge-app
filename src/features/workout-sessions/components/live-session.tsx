@@ -1,6 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useEffectEvent, useState } from "react";
+import {
+  useActionState,
+  useEffect,
+  useEffectEvent,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 
@@ -35,6 +41,26 @@ import {
 } from "@/features/workout-sessions/validation";
 
 const idleState: SessionActionState = { error: null, success: false };
+
+function subscribeClock(onStoreChange: () => void) {
+  const id = window.setInterval(onStoreChange, 250);
+  const onVisibility = () => onStoreChange();
+  document.addEventListener("visibilitychange", onVisibility);
+  window.addEventListener("focus", onVisibility);
+  return () => {
+    window.clearInterval(id);
+    document.removeEventListener("visibilitychange", onVisibility);
+    window.removeEventListener("focus", onVisibility);
+  };
+}
+
+function getClockSnapshot() {
+  return Date.now();
+}
+
+function getServerClockSnapshot() {
+  return 0;
+}
 
 function PendingLabel({ idle, pending }: { idle: string; pending: string }) {
   const { pending: isPending } = useFormStatus();
@@ -91,7 +117,11 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
     return defaultSectionResult(section.format);
   });
 
-  const [nowMs, setNowMs] = useState(() => Date.now());
+  const nowMs = useSyncExternalStore(
+    subscribeClock,
+    getClockSnapshot,
+    getServerClockSnapshot,
+  );
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
 
@@ -124,26 +154,23 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
     idleState,
   );
 
-  const tick = useEffectEvent(() => {
-    setNowMs(Date.now());
+  const refreshSession = useEffectEvent(() => {
+    router.refresh();
   });
 
   useEffect(() => {
-    const id = window.setInterval(() => {
-      tick();
-    }, 250);
     const onVisibility = () => {
-      tick();
-      router.refresh();
+      if (document.visibilityState === "visible") {
+        refreshSession();
+      }
     };
     document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("focus", onVisibility);
+    window.addEventListener("focus", refreshSession);
     return () => {
-      window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("focus", onVisibility);
+      window.removeEventListener("focus", refreshSession);
     };
-  }, [router]);
+  }, []);
 
   if (!section) {
     return (

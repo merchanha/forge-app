@@ -8,7 +8,13 @@ type SessionPageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function SessionContent({ id }: { id: string }) {
+async function SessionContent({
+  params,
+}: {
+  params: SessionPageProps["params"];
+}) {
+  const { id } = await params;
+
   let session: Awaited<ReturnType<typeof getOwnSession>> = null;
   try {
     session = await getOwnSession(id);
@@ -43,12 +49,10 @@ async function SessionContent({ id }: { id: string }) {
   return <LiveSession session={session} />;
 }
 
-export default async function SessionPage({ params }: SessionPageProps) {
-  const { id } = await params;
-
+export default function SessionPage({ params }: SessionPageProps) {
   return (
     <Suspense fallback={<p className="text-muted">Loading workout…</p>}>
-      <SessionContent id={id} />
+      <SessionContent params={params} />
     </Suspense>
   );
 }

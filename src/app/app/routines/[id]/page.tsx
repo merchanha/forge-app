@@ -10,7 +10,13 @@ type EditRoutinePageProps = {
   params: Promise<{ id: string }>;
 };
 
-async function EditRoutineContent({ id }: { id: string }) {
+async function EditRoutineContent({
+  params,
+}: {
+  params: EditRoutinePageProps["params"];
+}) {
+  const { id } = await params;
+
   const [routine, exercises, profile] = await Promise.all([
     getOwnRoutine(id),
     listOwnExercises(),
@@ -56,14 +62,10 @@ async function EditRoutineContent({ id }: { id: string }) {
   );
 }
 
-export default async function EditRoutinePage({
-  params,
-}: EditRoutinePageProps) {
-  const { id } = await params;
-
+export default function EditRoutinePage({ params }: EditRoutinePageProps) {
   return (
     <Suspense fallback={<p className="text-muted">Loading builder…</p>}>
-      <EditRoutineContent id={id} />
+      <EditRoutineContent params={params} />
     </Suspense>
   );
 }

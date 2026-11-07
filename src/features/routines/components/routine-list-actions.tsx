@@ -114,6 +114,13 @@ export function RoutineListActions({
             Edit
           </a>
 
+          <a
+            href={`/app/history?routineId=${routineId}`}
+            className="hover:bg-surface inline-flex min-h-11 w-full items-center rounded-md px-3 text-left text-sm font-semibold"
+          >
+            History
+          </a>
+
           <form action={duplicateAction}>
             <input type="hidden" name="id" value={routineId} />
             <button
