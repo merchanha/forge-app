@@ -1,7 +1,7 @@
 # FORGE — Discovery & Implementation Plan
 
 Planning document produced from product, design, and technical discovery.
-**Status:** Phase 0–5 implemented. Awaiting approval before Phase 6.
+**Status:** Phase 0–6 implemented. Awaiting approval before Phase 7.
 **Approved decisions:** see [`docs/approved-decisions.md`](./approved-decisions.md).
 
 **Sources reviewed:** `START-HERE-PROMPT.md`, `product-overview.md`, `.cursorrules`, `.cursor/rules/forge-engineering.mdc`, `README.md`, `design/FORGE.html`.
@@ -361,10 +361,13 @@ Do **not** wait for 100% coverage before shipping the vertical slice; lock the i
 - **Security:** Server Actions call `getUser()`; owner-only RLS unchanged on sessions/results; history and edits stay user-scoped. Comparison helpers are unit-tested pure functions in `src/features/performance`.
 - **Acceptance:** PR badge only when same metric + comparable context; unlike metrics never ranked; template edits leave snapshots unchanged; two-user RLS checklist in `docs/security-rls.md`; lint, typecheck, unit tests, and production build pass.
 
-### Phase 6 — Profile prefs, theme, responsive desktop layouts
+### Phase 6 — Profile prefs, theme, responsive desktop layouts *(implemented)*
 
-- **Outcome:** Units, theme, onboarding fields; desktop dashboard/builder/progress layouts from design.
-- **Non-goals:** Social, payments.
+- **Outcome:** Units, theme, onboarding fields (experience, disciplines/primary, goal, days/week, target event); dark/light theme via `data-theme`; responsive desktop hub/builder/progress layouts from design boards.
+- **Non-goals:** Social, payments, Explore, Google OAuth, AI Coach, remaining live timers.
+- **DB:** `supabase/migrations/20261107140000_profile_prefs.sql` adds theme + onboarding columns on `profiles`. Confirm Phase 1–5 versions are recorded (or apply idempotent Phase 3–5 files) before/with this push. Do not edit earlier migrations.
+- **Security:** Profile updates stay owner-only (`profiles_update_own`). Server Actions call `getUser()` and write `id` from that session.
+- **Acceptance:** Theme survives reload; units default kg; desktop layouts denser without redesigning mobile; Progressive sparkline only for filtered routine history with comparable scores; lint, typecheck, unit tests, and production build pass.
 
 ### Phase 7 — Remaining timer formats + polish
 

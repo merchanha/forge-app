@@ -147,11 +147,11 @@ function MovementSheetInner({
                         setUnit("reps");
                         setLoad(0);
                       }}
-                      className="flex min-h-14 w-full flex-col items-start justify-center rounded-lg border px-4 py-3 text-left"
-                      style={{
-                        background: on ? "#2A2A32" : "#1F1F25",
-                        borderColor: on ? "#FF5A1F" : "#1F1F25",
-                      }}
+                      className={`flex min-h-14 w-full flex-col items-start justify-center rounded-lg border px-4 py-3 text-left ${
+                        on
+                          ? "border-accent bg-raised"
+                          : "border-raised bg-raised"
+                      }`}
                     >
                       <span className="font-semibold">{exercise.name}</span>
                       <span className="text-muted text-xs">
@@ -179,12 +179,11 @@ function MovementSheetInner({
                     setUnit(option);
                     setQuantity(option === "m" ? 400 : option === "min" ? 5 : 10);
                   }}
-                  className="inline-flex min-h-12 min-w-14 items-center justify-center rounded-full border px-4 text-sm font-semibold"
-                  style={{
-                    background: on ? "#F4F2EE" : "#16161A",
-                    color: on ? "#0C0C0E" : "#F4F2EE",
-                    borderColor: on ? "#F4F2EE" : "#2A2A32",
-                  }}
+                  className={`inline-flex min-h-12 min-w-14 items-center justify-center rounded-full border px-4 text-sm font-semibold ${
+                    on
+                      ? "border-ink bg-ink text-ground"
+                      : "border-border bg-surface text-ink"
+                  }`}
                 >
                   {option}
                 </button>
@@ -258,11 +257,11 @@ function MovementSheetInner({
               loadUnit: load > 0 ? preferredLoadUnit : null,
             });
           }}
-          className="min-h-12 rounded-md px-4 font-semibold disabled:opacity-60"
-          style={{
-            background: selected ? "#FF5A1F" : "#2A2A32",
-            color: selected ? "#0C0C0E" : "#F4F2EE",
-          }}
+          className={`min-h-12 rounded-md px-4 font-semibold disabled:opacity-60 ${
+            selected
+              ? "bg-accent text-ground"
+              : "bg-border text-ink"
+          }`}
         >
           {addLabel}
         </button>

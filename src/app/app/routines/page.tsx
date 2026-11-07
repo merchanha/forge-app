@@ -38,12 +38,11 @@ function FilterChip({
   return (
     <Link
       href={href}
-      className="inline-flex min-h-12 items-center justify-center rounded-full border px-4 text-sm font-semibold"
-      style={{
-        background: active ? "#FF5A1F" : "#16161A",
-        color: active ? "#0C0C0E" : "#F4F2EE",
-        borderColor: active ? "#FF5A1F" : "#2A2A32",
-      }}
+      className={`inline-flex min-h-12 items-center justify-center rounded-full border px-4 text-sm font-semibold ${
+        active
+          ? "border-accent bg-accent text-ground"
+          : "border-border bg-surface text-ink"
+      }`}
     >
       {label}
     </Link>

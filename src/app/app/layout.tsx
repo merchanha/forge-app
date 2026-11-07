@@ -2,9 +2,12 @@ import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { ApplyTheme } from "@/features/profiles/components/apply-theme";
+import { AppShellNav } from "@/features/profiles/components/app-shell-nav";
+import { getOwnProfile } from "@/features/profiles/queries";
 import { requireUser } from "@/platform/supabase/require-user";
 
-async function AppHeader() {
+async function AppChrome() {
   // requireUser() awaits connection() before Supabase JWT Date.now() checks.
   let user: Awaited<ReturnType<typeof requireUser>>["user"] = null;
   try {
@@ -16,40 +19,51 @@ async function AppHeader() {
     redirect("/login");
   }
 
+  let theme: "dark" | "light" = "dark";
+  try {
+    const profile = await getOwnProfile();
+    theme = profile?.theme === "light" ? "light" : "dark";
+  } catch {
+    theme = "dark";
+  }
+
   return (
-    <header className="border-border flex items-center justify-between border-b px-6 py-4">
-      <Link
-        href="/app"
-        className="font-display text-xl font-extrabold tracking-wide uppercase"
-      >
-        FORGE
-      </Link>
-      <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm font-semibold">
-        <Link href="/app" className="text-muted hover:text-ink">
-          Hub
-        </Link>
-        <Link href="/app/routines" className="text-muted hover:text-ink">
-          Training
-        </Link>
-        <Link href="/app/history" className="text-muted hover:text-ink">
-          History
-        </Link>
-        <Link href="/app/exercises" className="text-muted hover:text-ink">
-          Exercises
-        </Link>
-        <Link href="/app/profile" className="text-muted hover:text-ink">
-          Profile
-        </Link>
-      </nav>
-    </header>
+    <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            theme === "light"
+              ? `document.documentElement.dataset.theme="light";`
+              : `delete document.documentElement.dataset.theme;`,
+        }}
+      />
+      <ApplyTheme theme={theme} />
+      <aside className="border-border flex flex-col gap-4 border-b px-6 py-4 lg:sticky lg:top-0 lg:h-dvh lg:w-56 lg:shrink-0 lg:border-r lg:border-b-0 lg:px-5 lg:py-6">
+        <div className="flex items-center justify-between gap-4 lg:flex-col lg:items-stretch">
+          <Link
+            href="/app"
+            className="font-display text-xl font-extrabold tracking-wide uppercase"
+          >
+            FORGE
+          </Link>
+          <Link
+            href="/app/routines/new"
+            className="bg-accent text-ground hidden min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold lg:inline-flex"
+          >
+            ＋ Create Routine
+          </Link>
+        </div>
+        <AppShellNav />
+      </aside>
+    </>
   );
 }
 
-function HeaderFallback() {
+function ChromeFallback() {
   return (
-    <header className="border-border text-muted flex min-h-[65px] items-center border-b px-6 py-4 text-sm">
+    <aside className="border-border text-muted flex min-h-[65px] items-center border-b px-6 py-4 text-sm lg:h-dvh lg:w-56 lg:shrink-0 lg:border-r lg:border-b-0">
       Loading…
-    </header>
+    </aside>
   );
 }
 
@@ -64,11 +78,13 @@ export default function AppLayout({
   children: ReactNode;
 }>) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col">
-      <Suspense fallback={<HeaderFallback />}>
-        <AppHeader />
+    <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col lg:flex-row">
+      <Suspense fallback={<ChromeFallback />}>
+        <AppChrome />
       </Suspense>
-      <div className="flex-1 px-6 py-6">{children}</div>
+      <div className="flex min-w-0 flex-1 flex-col px-6 py-6 lg:px-8 lg:py-8">
+        {children}
+      </div>
     </div>
   );
 }

@@ -104,6 +104,36 @@ Run this after Phase 3 and Phase 4 versions are recorded and `20261107120000_per
 3. As User B, confirm `/app/history` does not list A’s sessions, opening A’s review URL fails or shows not found, and direct update of A’s `session_section_results` id affects 0 rows.
 4. Sign out; confirm `/app/history` redirects to `/login`.
 
+## Profile preferences (Phase 6)
+
+No new tables. Columns added on `profiles` by `20261107140000_profile_prefs.sql`:
+
+- `theme` (`dark` | `light`, default `dark`)
+- `experience_level` (nullable enum)
+- `disciplines` (`text[]`, allowlisted values, max 8)
+- `primary_discipline` (nullable; must be in `disciplines` when set)
+- `goal` (nullable enum)
+- `days_per_week` (nullable 1–7)
+- `target_event` (trimmed text ≤ 80)
+
+Existing owner-only policies still apply:
+
+| Policy | Intent |
+|---|---|
+| `profiles_select_own` | Authenticated user can read only `profiles.id = auth.uid()` |
+| `profiles_update_own` | Authenticated user can update only their row |
+| No insert policy | Profile insert remains via `handle_new_user` only |
+
+Server Actions call `getUser()` and update `profiles` with `.eq("id", user.id)`. Never trust a client-supplied user id.
+
+## Manual two-user test — profile prefs and theme
+
+Run this after `20261107140000_profile_prefs.sql` has been applied once. Confirm Phase 1–5 versions are recorded first when possible. Do not re-apply earlier migrations.
+
+1. Sign in as User A. Open `/app/profile`, set a distinct display name, switch units to lb, choose light theme, pick experience/disciplines/goal/days/target event, and save. Confirm the UI switches to light and survives a full reload.
+2. As User B, confirm B cannot select or update A’s profile row (0 rows affected), and B’s own theme/units remain independent.
+3. Sign out; confirm `/app/profile` redirects to `/login`.
+
 ## Session rules
 
 - Never put the service role key in client bundles or `NEXT_PUBLIC_*`.

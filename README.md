@@ -6,8 +6,8 @@ Fitness training application: create routines, execute format-aware workouts, an
 
 ## Current status
 
-**Phase 5 complete (results, history, basic comparisons).**  
-Email/password auth, cookie sessions, profiles, exercises, routines, and workout sessions are in place. Athletes can finish a session, review snapshot + results, edit saved results later, browse completed history, and see metric-aware deltas / PR markers for compatible For Time, AMRAP, and Strength repeats. Desktop Progress charts, Explore, Google OAuth, and AI Coach remain later.
+**Phase 6 complete (profile prefs, theme, responsive desktop layouts).**  
+Email/password auth, cookie sessions, profiles, exercises, routines, workout sessions, and history/compare are in place. Athletes can set units (kg/lb), dark/light theme, and basic training prefs; desktop hub/builder/progress layouts densify at large breakpoints while mobile stays compact. Explore, Google OAuth, AI Coach, and remaining live timer formats remain later.
 
 Product requirements: [`product-overview.md`](./product-overview.md)  
 Design source of truth: [`design/FORGE.html`](./design/FORGE.html)  
@@ -65,8 +65,9 @@ Expected versions in `supabase_migrations.schema_migrations`:
 - `20261106223000` / `routines`
 - `20261107010000` / `workout_sessions`
 - `20261107120000` / `performance_history` (Phase 5 index)
+- `20261107140000` / `profile_prefs` (Phase 6 theme + onboarding fields)
 
-If the linked project only has profiles + exercises recorded but Phase 3/4 tables already exist, push the repo (preferred) or run `npx supabase db push` once. Phase 3 and Phase 4 migrations are **idempotent** and will record themselves; then Phase 5 adds the history index. Do not re-run `profiles` or `exercises` migrations. Do not paste migration SQL into the editor and also let the integration apply the same unrecorded file.
+If earlier Phase 3–5 versions are missing but tables/indexes already exist, push the repo (preferred) or run `npx supabase db push` once. Phase 3 and Phase 4 migrations are **idempotent** and will record themselves; then Phase 5/6 apply. Do not re-run `profiles` or `exercises` migrations. Do not paste migration SQL into the editor and also let the integration apply the same unrecorded file.
 
 ### Auth settings (local MVP)
 
@@ -119,7 +120,7 @@ FORGE/
 │   │   ├── auth/
 │   │   ├── exercises/
 │   │   ├── performance/    # History, compares, result edits
-│   │   ├── profiles/
+│   │   ├── profiles/       # Prefs, theme, app shell nav
 │   │   ├── routines/
 │   │   └── workout-sessions/
 │   ├── platform/supabase/  # SSR clients + types
@@ -130,5 +131,5 @@ FORGE/
 
 ## Phase boundary
 
-**In Phase 5:** Completed-session history, post-workout review polish (template unchanged messaging), edit saved results, metric-aware For Time / AMRAP / Strength compares with PR markers, owner-only RLS.  
-**Out:** Desktop Progress charts, Fran entity graph, EMOM/Tabata/Intervals/Running/RFT live timers, Google OAuth, AI Coach, Explore, hosted video.
+**In Phase 6:** Profile prefs (units/theme/onboarding fields), light theme via design tokens, responsive desktop Dashboard/Builder/Progress layouts, owner-only profile updates.  
+**Out:** EMOM/Tabata/Intervals/Running/RFT live timers, Google OAuth, AI Coach, Explore, hosted video, social/payments.

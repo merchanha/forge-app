@@ -1,5 +1,15 @@
 export type PreferredUnits = "kg" | "lb";
 
+export type ProfileTheme = "dark" | "light";
+
+export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
+
+export type TrainingGoal =
+  | "endurance"
+  | "general_fitness"
+  | "strength"
+  | "competition";
+
 export type ExerciseMovementCategory =
   | "olympic"
   | "strength"
@@ -48,6 +58,13 @@ export type Database = {
           id: string;
           display_name: string;
           preferred_units: PreferredUnits;
+          theme: ProfileTheme;
+          experience_level: ExperienceLevel | null;
+          disciplines: string[];
+          primary_discipline: string | null;
+          goal: TrainingGoal | null;
+          days_per_week: number | null;
+          target_event: string;
           created_at: string;
           updated_at: string;
         };
@@ -55,6 +72,13 @@ export type Database = {
           id: string;
           display_name?: string;
           preferred_units?: PreferredUnits;
+          theme?: ProfileTheme;
+          experience_level?: ExperienceLevel | null;
+          disciplines?: string[];
+          primary_discipline?: string | null;
+          goal?: TrainingGoal | null;
+          days_per_week?: number | null;
+          target_event?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -62,6 +86,13 @@ export type Database = {
           id?: string;
           display_name?: string;
           preferred_units?: PreferredUnits;
+          theme?: ProfileTheme;
+          experience_level?: ExperienceLevel | null;
+          disciplines?: string[];
+          primary_discipline?: string | null;
+          goal?: TrainingGoal | null;
+          days_per_week?: number | null;
+          target_event?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -336,6 +367,9 @@ export type Database = {
     };
     Enums: {
       preferred_units: PreferredUnits;
+      profile_theme: ProfileTheme;
+      experience_level: ExperienceLevel;
+      training_goal: TrainingGoal;
       exercise_movement_category: ExerciseMovementCategory;
       routine_category: RoutineCategory;
       workout_format: WorkoutFormat;

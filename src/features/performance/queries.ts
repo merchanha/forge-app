@@ -40,6 +40,9 @@ export type HistorySessionSummary = {
   scaling: SessionScaling;
   completedAt: string;
   primaryLabel: string | null;
+  /** Numeric primary score for sparklines; same family/direction as peers. */
+  primaryValue: number | null;
+  primaryDirection: MetricScore["direction"] | null;
   isPersonalRecord: boolean;
   deltaLabel: string | null;
 };
@@ -113,6 +116,8 @@ function annotateHistory(rows: HistoryRow[]): HistorySessionSummary[] {
         scaling: row.scaling,
         completedAt: row.completedAt,
         primaryLabel: null,
+        primaryValue: null,
+        primaryDirection: null,
         isPersonalRecord: false,
         deltaLabel: null,
       };
@@ -153,6 +158,8 @@ function annotateHistory(rows: HistoryRow[]): HistorySessionSummary[] {
       scaling: row.scaling,
       completedAt: row.completedAt,
       primaryLabel: row.primary.score.label,
+      primaryValue: row.primary.score.value,
+      primaryDirection: row.primary.score.direction,
       isPersonalRecord: isPersonalRecordScore(row.primary.score, historyScores),
       deltaLabel,
     };

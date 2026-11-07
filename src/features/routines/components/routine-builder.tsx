@@ -235,34 +235,8 @@ export function RoutineBuilder({
     };
   }
 
-  return (
-    <div className="flex flex-col gap-6">
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-2">
-          <p className="text-muted text-sm font-semibold uppercase">
-            {preview ? "Preview" : "Builder"}
-          </p>
-          <h1 className="font-display text-4xl font-extrabold tracking-wide uppercase">
-            {preview ? "Preview" : "Routine"}
-          </h1>
-        </div>
-        <button
-          type="button"
-          onClick={() => setPreview((value) => !value)}
-          className="border-border text-ink inline-flex min-h-12 items-center justify-center rounded-md border px-4 text-sm font-semibold"
-        >
-          {preview ? "Edit" : "Preview"}
-        </button>
-      </header>
-
-      {preview ? (
-        <PreviewPanel
-          name={name}
-          category={category}
-          sections={sections}
-        />
-      ) : (
-        <>
+  const editor = (
+    <>
           <section className="flex flex-col gap-3">
             <p className="text-muted text-sm font-semibold">Workout type</p>
             <div className="flex flex-wrap gap-2">
@@ -273,12 +247,11 @@ export function RoutineBuilder({
                     key={option}
                     type="button"
                     onClick={() => setCategory(option)}
-                    className="inline-flex min-h-12 items-center justify-center rounded-full border px-4 text-sm font-semibold"
-                    style={{
-                      background: on ? "#FF5A1F" : "#16161A",
-                      color: on ? "#0C0C0E" : "#F4F2EE",
-                      borderColor: on ? "#FF5A1F" : "#2A2A32",
-                    }}
+                    className={`inline-flex min-h-12 items-center justify-center rounded-full border px-4 text-sm font-semibold ${
+                      on
+                        ? "border-accent bg-accent text-ground"
+                        : "border-border bg-surface text-ink"
+                    }`}
                   >
                     {routineCategoryLabels[option]}
                   </button>
@@ -345,8 +318,9 @@ export function RoutineBuilder({
                 return (
                   <li
                     key={section.clientId}
-                    className="border-border bg-surface rounded-lg border"
-                    style={{ borderColor: open ? "#FF5A1F" : undefined }}
+                    className={`border-border bg-surface rounded-lg border ${
+                      open ? "border-accent" : ""
+                    }`}
                   >
                     <div className="flex items-start gap-2 p-3">
                       <button
@@ -734,9 +708,10 @@ export function RoutineBuilder({
               ＋ Add section
             </button>
           </section>
-        </>
-      )}
+    </>
+  );
 
+  const saveForm = (
       <form
         action={formAction}
         className="flex flex-col gap-3"
@@ -768,11 +743,52 @@ export function RoutineBuilder({
           idleLabel="Save to My Training"
           pendingLabel="Saving…"
         />
+        <p className="text-muted text-sm">
+          Saving creates a reusable template. Each workout you run is stored
+          separately in history.
+        </p>
       </form>
+  );
 
-      {initial?.id ? (
-        <StartWorkoutButton routineId={initial.id} label="Start workout" />
-      ) : null}
+  return (
+    <div className="flex flex-col gap-6">
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-2">
+          <p className="text-muted text-sm font-semibold uppercase">
+            {preview ? "Preview" : "Routine builder"}
+          </p>
+          <h1 className="font-display text-4xl font-extrabold tracking-wide uppercase">
+            {preview ? "Preview" : name.trim() || "Routine"}
+          </h1>
+        </div>
+        <button
+          type="button"
+          onClick={() => setPreview((value) => !value)}
+          className="border-border text-ink inline-flex min-h-12 items-center justify-center rounded-md border px-4 text-sm font-semibold lg:hidden"
+        >
+          {preview ? "Edit" : "Preview"}
+        </button>
+      </header>
+
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)] lg:items-start lg:gap-6">
+        <div className={`flex flex-col gap-6 ${preview ? "hidden lg:flex" : "flex"}`}>
+          {editor}
+          {saveForm}
+          {initial?.id ? (
+            <StartWorkoutButton routineId={initial.id} label="Start workout" />
+          ) : null}
+        </div>
+
+        <div className={`${preview ? "block" : "hidden lg:block"}`}>
+          <div className="lg:sticky lg:top-8">
+            <PreviewPanel
+              name={name}
+              category={category}
+              sections={sections}
+            />
+          </div>
+        </div>
+      </div>
 
       {sheet === "format" ? (
         <FormatSheet

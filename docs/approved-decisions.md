@@ -75,3 +75,12 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - PR markers appear only when the metric family and prescription context are compatible (same format config context + same scaling).
 - Matching is practical and routine-based (`routine_id`); there is no Fran/benchmark entity graph.
 - Explore, Google OAuth, AI Coach, remaining live timers, and desktop Progress chart parity stay out of this phase.
+
+## Phase 6 engineering
+
+- Profile prefs and theme live in `src/features/profiles` (+ shared theme tokens). Reuse `src/platform/supabase`; do not import another feature’s internals.
+- Persist `preferred_units` (default kg), `theme` (dark/light), and basic onboarding fields: experience, disciplines/primary, goal, days/week, target event.
+- Theme applies through existing `[data-theme="light"]` CSS variables without redesigning the dark-first system.
+- Responsive desktop layouts for Dashboard, Builder, and Progress/History follow the design boards; mobile remains the primary compact layout. Explore and AI Coach stay hidden.
+- Progress sparkline reuses `src/features/performance` metric-aware scores for a selected routine; no Fran entity graph.
+- Explore, Google OAuth, AI Coach, and remaining live timer formats stay out of this phase.

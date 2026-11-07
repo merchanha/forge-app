@@ -23,6 +23,13 @@ export async function updateProfileAction(
   const parsed = updateProfileSchema.safeParse({
     displayName: formData.get("displayName"),
     preferredUnits: formData.get("preferredUnits"),
+    theme: formData.get("theme"),
+    experienceLevel: formData.get("experienceLevel"),
+    disciplines: formData.getAll("disciplines"),
+    primaryDiscipline: formData.get("primaryDiscipline"),
+    goal: formData.get("goal"),
+    daysPerWeek: formData.get("daysPerWeek"),
+    targetEvent: formData.get("targetEvent") ?? "",
   });
 
   if (!parsed.success) {
@@ -44,6 +51,13 @@ export async function updateProfileAction(
     .update({
       display_name: parsed.data.displayName,
       preferred_units: parsed.data.preferredUnits,
+      theme: parsed.data.theme,
+      experience_level: parsed.data.experienceLevel,
+      disciplines: parsed.data.disciplines,
+      primary_discipline: parsed.data.primaryDiscipline,
+      goal: parsed.data.goal,
+      days_per_week: parsed.data.daysPerWeek,
+      target_event: parsed.data.targetEvent,
     })
     .eq("id", user.id);
 
@@ -53,5 +67,7 @@ export async function updateProfileAction(
 
   revalidatePath("/app");
   revalidatePath("/app/profile");
+  revalidatePath("/app/routines");
+  revalidatePath("/app/history");
   return { error: null, success: true };
 }
