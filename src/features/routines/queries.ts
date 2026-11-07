@@ -28,6 +28,9 @@ export type RoutineExerciseDetail = {
   quantityUnit: QuantityUnit;
   loadValue: number | null;
   loadUnit: PreferredUnits | null;
+  targetPaceSecondsPerKm: number | null;
+  hrZone: "Z1" | "Z2" | "Z3" | "Z4" | "Z5" | null;
+  segmentRepeats: number | null;
   notes: string;
 };
 
@@ -46,6 +49,10 @@ export type RoutineDetail = {
   description: string;
   category: ValidatedCategory;
   tags: string[];
+  objective: string;
+  equipment: string;
+  scaling: string;
+  effortRpe: number | null;
   isFavorite: boolean;
   archivedAt: string | null;
   createdAt: string;
@@ -54,7 +61,7 @@ export type RoutineDetail = {
 };
 
 const routineColumns =
-  "id, user_id, name, description, category, tags, is_favorite, archived_at, created_at, updated_at";
+  "id, user_id, name, description, category, tags, objective, equipment, scaling, effort_rpe, is_favorite, archived_at, created_at, updated_at";
 
 function parseFormatConfig(
   format: WorkoutFormat,
@@ -181,6 +188,9 @@ export async function getOwnRoutine(id: string): Promise<RoutineDetail | null> {
     quantity_unit: QuantityUnit;
     load_value: number | null;
     load_unit: PreferredUnits | null;
+    target_pace_seconds_per_km: number | null;
+    hr_zone: "Z1" | "Z2" | "Z3" | "Z4" | "Z5" | null;
+    segment_repeats: number | null;
     notes: string;
   }> = [];
 
@@ -188,7 +198,7 @@ export async function getOwnRoutine(id: string): Promise<RoutineDetail | null> {
     const { data, error } = await supabase
       .from("routine_exercises")
       .select(
-        "id, section_id, exercise_id, sort_order, quantity, quantity_unit, load_value, load_unit, notes",
+        "id, section_id, exercise_id, sort_order, quantity, quantity_unit, load_value, load_unit, target_pace_seconds_per_km, hr_zone, segment_repeats, notes",
       )
       .eq("user_id", user.id)
       .in("section_id", sectionIds)
@@ -231,8 +241,12 @@ export async function getOwnRoutine(id: string): Promise<RoutineDetail | null> {
     id: routine.id,
     name: routine.name,
     description: routine.description,
-    category: routine.category,
+    category: routine.category as ValidatedCategory,
     tags: routine.tags,
+    objective: routine.objective,
+    equipment: routine.equipment,
+    scaling: routine.scaling,
+    effortRpe: routine.effort_rpe,
     isFavorite: routine.is_favorite,
     archivedAt: routine.archived_at,
     createdAt: routine.created_at,
@@ -240,7 +254,7 @@ export async function getOwnRoutine(id: string): Promise<RoutineDetail | null> {
     sections: sectionList.map((section) => ({
       id: section.id,
       name: section.name,
-      format: section.format,
+      format: section.format as ValidatedFormat,
       formatConfig: parseFormatConfig(section.format, section.format_config),
       sortOrder: section.sort_order,
       exercises: exerciseRows
@@ -257,6 +271,9 @@ export async function getOwnRoutine(id: string): Promise<RoutineDetail | null> {
             quantityUnit: row.quantity_unit,
             loadValue: row.load_value == null ? null : Number(row.load_value),
             loadUnit: row.load_unit,
+            targetPaceSecondsPerKm: row.target_pace_seconds_per_km,
+            hrZone: row.hr_zone,
+            segmentRepeats: row.segment_repeats,
             notes: row.notes,
           };
         }),

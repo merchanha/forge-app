@@ -28,6 +28,27 @@ const snapshotExerciseSchema = z
     quantityUnit: quantityUnitSchema,
     loadValue: z.number().min(0).max(10000).nullable(),
     loadUnit: loadUnitSchema.nullable(),
+    targetPaceSecondsPerKm: z
+      .number()
+      .int()
+      .min(150)
+      .max(1800)
+      .nullable()
+      .optional()
+      .transform((value) => value ?? null),
+    hrZone: z
+      .enum(["Z1", "Z2", "Z3", "Z4", "Z5"])
+      .nullable()
+      .optional()
+      .transform((value) => value ?? null),
+    segmentRepeats: z
+      .number()
+      .int()
+      .min(1)
+      .max(100)
+      .nullable()
+      .optional()
+      .transform((value) => value ?? null),
     notes: z.string().max(300),
   })
   .strict();
@@ -65,12 +86,35 @@ const snapshotSectionSchema = z
 
 export const routineSnapshotSchema = z
   .object({
-    snapshotVersion: z.literal(1),
+    snapshotVersion: z.union([z.literal(1), z.literal(2)]),
     routineId: z.uuid(),
     name: z.string().trim().min(1).max(80),
     description: z.string().max(500),
     category: routineCategorySchema,
     tags: z.array(z.string().max(24)).max(12),
+    objective: z
+      .string()
+      .max(80)
+      .optional()
+      .transform((value) => value ?? ""),
+    equipment: z
+      .string()
+      .max(80)
+      .optional()
+      .transform((value) => value ?? ""),
+    scaling: z
+      .string()
+      .max(80)
+      .optional()
+      .transform((value) => value ?? ""),
+    effortRpe: z
+      .number()
+      .int()
+      .min(1)
+      .max(10)
+      .nullable()
+      .optional()
+      .transform((value) => value ?? null),
     sections: z.array(snapshotSectionSchema).min(1).max(20),
   })
   .strict();

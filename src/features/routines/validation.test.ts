@@ -126,6 +126,40 @@ describe("routineInputSchema", () => {
     expect(parsed.success).toBe(false);
   });
 
+  it("accepts running segments with pace and zone", () => {
+    const parsed = routineInputSchema.safeParse({
+      name: "5k Progression Run",
+      description: "",
+      category: "running",
+      tags: ["threshold"],
+      objective: "First 5k",
+      equipment: "Road",
+      scaling: "On",
+      effortRpe: 6,
+      sections: [
+        {
+          name: "Main set",
+          format: "intervals",
+          formatConfig: defaultFormatConfig("intervals"),
+          exercises: [
+            {
+              exerciseId,
+              quantity: 600,
+              quantityUnit: "m",
+              loadValue: null,
+              loadUnit: null,
+              targetPaceSecondsPerKm: 300,
+              hrZone: "Z4",
+              segmentRepeats: 6,
+              notes: "",
+            },
+          ],
+        },
+      ],
+    });
+    expect(parsed.success).toBe(true);
+  });
+
   it("rejects load without a unit", () => {
     const parsed = routineInputSchema.safeParse({
       ...valid,

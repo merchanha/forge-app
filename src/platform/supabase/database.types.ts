@@ -32,7 +32,9 @@ export type WorkoutFormat =
   | "running"
   | "custom";
 
-export type QuantityUnit = "reps" | "m" | "cal" | "min";
+export type QuantityUnit = "reps" | "m" | "km" | "cal" | "min";
+
+export type HrZone = "Z1" | "Z2" | "Z3" | "Z4" | "Z5";
 
 export type SessionStatus =
   | "planned"
@@ -144,6 +146,10 @@ export type Database = {
           tags: string[];
           is_favorite: boolean;
           archived_at: string | null;
+          objective: string;
+          equipment: string;
+          scaling: string;
+          effort_rpe: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -156,6 +162,10 @@ export type Database = {
           tags?: string[];
           is_favorite?: boolean;
           archived_at?: string | null;
+          objective?: string;
+          equipment?: string;
+          scaling?: string;
+          effort_rpe?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -168,6 +178,10 @@ export type Database = {
           tags?: string[];
           is_favorite?: boolean;
           archived_at?: string | null;
+          objective?: string;
+          equipment?: string;
+          scaling?: string;
+          effort_rpe?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -221,6 +235,9 @@ export type Database = {
           load_value: number | null;
           load_unit: PreferredUnits | null;
           notes: string;
+          target_pace_seconds_per_km: number | null;
+          hr_zone: HrZone | null;
+          segment_repeats: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -235,6 +252,9 @@ export type Database = {
           load_value?: number | null;
           load_unit?: PreferredUnits | null;
           notes?: string;
+          target_pace_seconds_per_km?: number | null;
+          hr_zone?: HrZone | null;
+          segment_repeats?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -249,6 +269,9 @@ export type Database = {
           load_value?: number | null;
           load_unit?: PreferredUnits | null;
           notes?: string;
+          target_pace_seconds_per_km?: number | null;
+          hr_zone?: HrZone | null;
+          segment_repeats?: number | null;
           created_at?: string;
           updated_at?: string;
         };

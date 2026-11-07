@@ -67,6 +67,7 @@ Expected versions in `supabase_migrations.schema_migrations`:
 - `20261107120000` / `performance_history` (Phase 5 index)
 - `20261107140000` / `profile_prefs` (Phase 6 theme + onboarding fields)
 - `20261107160000` / `explore_catalog` (Phase 8 curated templates)
+- `20261107180000` / `running_builder` (Running segment fields + routine more-options)
 
 If earlier Phase 3–6 versions are missing but tables/indexes already exist, push the repo (preferred) or run `npx supabase db push` once. Phase 3–6 migrations are **idempotent** and will record themselves; then Phase 8 applies. Do not re-run `profiles` or `exercises` migrations. Do not paste migration SQL into the editor and also let the integration apply the same unrecorded file.
 

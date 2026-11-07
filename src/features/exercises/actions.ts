@@ -45,6 +45,86 @@ async function requireActionUser() {
   return { supabase, user };
 }
 
+export type EnsureExerciseResult =
+  | {
+      ok: true;
+      id: string;
+      name: string;
+      demoUrl: string | null;
+    }
+  | { ok: false; error: string };
+
+/** Find-or-create an owned exercise by exact name (used by Running segment presets). */
+export async function ensureOwnedExerciseAction(input: {
+  name: string;
+  description?: string;
+  movementCategory: string;
+  equipment: string;
+}): Promise<EnsureExerciseResult> {
+  const parsed = exerciseInputSchema.safeParse({
+    name: input.name,
+    description: input.description ?? "",
+    movementCategory: input.movementCategory,
+    equipment: input.equipment,
+    demoUrl: "",
+  });
+  if (!parsed.success) {
+    return { ok: false, error: firstZodError(parsed.error) };
+  }
+
+  const { supabase, user } = await requireActionUser();
+  if (!user) {
+    return { ok: false, error: "You must be signed in." };
+  }
+
+  const { data: existing, error: existingError } = await supabase
+    .from("exercises")
+    .select("id, name, demo_url")
+    .eq("user_id", user.id)
+    .eq("name", parsed.data.name)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingError) {
+    return { ok: false, error: "Could not look up exercises." };
+  }
+
+  if (existing) {
+    return {
+      ok: true,
+      id: existing.id,
+      name: existing.name,
+      demoUrl: existing.demo_url,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("exercises")
+    .insert({
+      user_id: user.id,
+      name: parsed.data.name,
+      description: parsed.data.description,
+      movement_category: parsed.data.movementCategory,
+      equipment: parsed.data.equipment,
+      demo_url: null,
+    })
+    .select("id, name, demo_url")
+    .single();
+
+  if (error || !data) {
+    return { ok: false, error: "Could not create this exercise." };
+  }
+
+  revalidatePath("/app/exercises");
+  return {
+    ok: true,
+    id: data.id,
+    name: data.name,
+    demoUrl: data.demo_url,
+  };
+}
+
 export async function createExerciseAction(
   _prev: ExerciseActionState,
   formData: FormData,

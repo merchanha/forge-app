@@ -56,9 +56,16 @@ export const workoutFormatHints: Record<WorkoutFormat, string> = {
   custom: "Free blocks, optional timer",
 };
 
-export const quantityUnits = ["reps", "m", "cal", "min"] as const;
+export const quantityUnits = ["reps", "m", "km", "cal", "min"] as const;
 export const quantityUnitSchema = z.enum(quantityUnits);
 export type QuantityUnit = z.infer<typeof quantityUnitSchema>;
+
+export const runningQuantityUnits = ["km", "m", "min"] as const;
+export type RunningQuantityUnit = (typeof runningQuantityUnits)[number];
+
+export const hrZones = ["Z1", "Z2", "Z3", "Z4", "Z5"] as const;
+export const hrZoneSchema = z.enum(hrZones);
+export type HrZone = z.infer<typeof hrZoneSchema>;
 
 export const loadUnitSchema = z.enum(["kg", "lb"]);
 export type LoadUnit = z.infer<typeof loadUnitSchema>;
@@ -210,6 +217,44 @@ export const suggestedFormatsByCategory: Record<
   custom: [...workoutFormats],
 };
 
+/** Running offers only its suggested formats; others keep suggested + remaining. */
+export function formatOrderForCategory(
+  category: RoutineCategory,
+): WorkoutFormat[] {
+  const suggested = suggestedFormatsByCategory[category];
+  if (category === "running") {
+    return suggested;
+  }
+  return [
+    ...suggested,
+    ...workoutFormats.filter((format) => !suggested.includes(format)),
+  ];
+}
+
+export const defaultRoutineNames: Record<RoutineCategory, string> = {
+  crossfit: "Monday Engine Builder",
+  hyrox: "HYROX Pace Builder",
+  running: "5k Progression Run",
+  custom: "New routine",
+};
+
+export function formatPaceLabel(secondsPerKm: number): string {
+  const m = Math.floor(secondsPerKm / 60);
+  const s = secondsPerKm % 60;
+  return `${m}:${String(s).padStart(2, "0")} /km`;
+}
+
+export function formatQuantityLabel(
+  quantity: number,
+  unit: QuantityUnit,
+): string {
+  if (unit === "km") {
+    const rounded = Math.round(quantity * 10) / 10;
+    return `${rounded} km`;
+  }
+  return `${quantity} ${unit}`;
+}
+
 export function formatConfigSummary(
   format: WorkoutFormat,
   config: FormatConfigMap[WorkoutFormat],
@@ -286,6 +331,21 @@ export const routineExerciseInputSchema = z
       .nullable()
       .optional(),
     loadUnit: loadUnitSchema.nullable().optional(),
+    targetPaceSecondsPerKm: z.coerce
+      .number()
+      .int("Pace must be a whole number of seconds")
+      .min(150, "Pace must be at least 2:30 /km")
+      .max(1800, "Pace must be at most 30:00 /km")
+      .nullable()
+      .optional(),
+    hrZone: hrZoneSchema.nullable().optional(),
+    segmentRepeats: z.coerce
+      .number()
+      .int("Repeats must be a whole number")
+      .min(1, "Repeats must be at least 1")
+      .max(100, "Repeats must be at most 100")
+      .nullable()
+      .optional(),
     notes: z
       .string()
       .trim()
@@ -323,6 +383,9 @@ export const routineExerciseInputSchema = z
       quantityUnit: value.quantityUnit,
       loadValue: hasLoad ? value.loadValue! : null,
       loadUnit: hasLoad ? value.loadUnit! : null,
+      targetPaceSecondsPerKm: value.targetPaceSecondsPerKm ?? null,
+      hrZone: value.hrZone ?? null,
+      segmentRepeats: value.segmentRepeats ?? null,
       notes: value.notes,
     };
   });
@@ -389,6 +452,32 @@ export const routineInputSchema = z.object({
     .transform((tags) =>
       [...new Set(tags.map((tag) => tag.toLowerCase()))].slice(0, 12),
     ),
+  objective: z
+    .string()
+    .trim()
+    .max(80, "Objective must be 80 characters or fewer")
+    .default(""),
+  equipment: z
+    .string()
+    .trim()
+    .max(80, "Equipment must be 80 characters or fewer")
+    .default(""),
+  scaling: z
+    .string()
+    .trim()
+    .max(80, "Scaling must be 80 characters or fewer")
+    .default(""),
+  effortRpe: z
+    .union([
+      z.coerce
+        .number()
+        .int("RPE must be a whole number")
+        .min(1, "RPE must be at least 1")
+        .max(10, "RPE must be at most 10"),
+      z.null(),
+    ])
+    .optional()
+    .transform((value) => value ?? null),
   sections: z
     .array(routineSectionInputSchema)
     .min(1, "Add at least one section")
@@ -409,6 +498,7 @@ export const deleteRoutineSchema = z.object({
 export const quantityStep: Record<QuantityUnit, number> = {
   reps: 1,
   m: 50,
+  km: 0.5,
   cal: 1,
   min: 1,
 };

@@ -100,3 +100,11 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - Authenticated athletes may `select` catalog rows only. No user insert/update/delete on system rows.
 - `copy_explore_template` creates a private owned routine (new IDs), find-or-creating exercises by exact name from the athlete’s library.
 - Explore appears in app nav. Google OAuth and AI Coach stay out.
+
+## Design fidelity (post–Phase 8)
+
+- Mobile primary nav is a bottom tab bar: Dashboard · My Training · Explore · Progress. AI Coach tab waits for Phase 9.
+- Profile is reached from the avatar, not the tab bar. Exercises stay available as a secondary route.
+- Builder / live session / review hide the mobile tab bar.
+- Running builder uses segment rows (distance/time, target pace /km, HR zone, repeats), run-segment presets, and persisted more-options (`objective`, `equipment`/`surface`, `scaling`/`HR zones`, `effort_rpe`).
+- Session snapshots use `snapshotVersion: 2` and keep optional fields for older snapshots.

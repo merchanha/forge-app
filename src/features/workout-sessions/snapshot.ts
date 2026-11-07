@@ -6,12 +6,16 @@ import {
 
 export function buildRoutineSnapshot(routine: RoutineDetail): RoutineSnapshot {
   const snapshot = {
-    snapshotVersion: 1 as const,
+    snapshotVersion: 2 as const,
     routineId: routine.id,
     name: routine.name,
     description: routine.description,
     category: routine.category,
     tags: routine.tags,
+    objective: routine.objective,
+    equipment: routine.equipment,
+    scaling: routine.scaling,
+    effortRpe: routine.effortRpe,
     sections: routine.sections.map((section) => ({
       name: section.name,
       format: section.format,
@@ -24,6 +28,9 @@ export function buildRoutineSnapshot(routine: RoutineDetail): RoutineSnapshot {
         quantityUnit: exercise.quantityUnit,
         loadValue: exercise.loadValue,
         loadUnit: exercise.loadUnit,
+        targetPaceSecondsPerKm: exercise.targetPaceSecondsPerKm,
+        hrZone: exercise.hrZone,
+        segmentRepeats: exercise.segmentRepeats,
         notes: exercise.notes,
       })),
     })),

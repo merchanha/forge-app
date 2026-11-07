@@ -151,6 +151,16 @@ Manual two-user session checks from Phase 4 still apply. Optionally also start a
 
 `copy_explore_template(uuid)` is `security invoker`, executable by `authenticated` only, and writes the new routine / sections / exercises with `user_id = auth.uid()`. Missing exercises are created as private copies by exact name. Format configs remain constrained by `is_valid_format_config` on catalog sections.
 
+## Running builder fields (post–Phase 8)
+
+No new tables. `20261107180000_running_builder.sql` extends owner-only `routines` / `routine_exercises`:
+
+- `routines.objective`, `equipment`, `scaling`, `effort_rpe`
+- `routine_exercises.target_pace_seconds_per_km`, `hr_zone`, `segment_repeats`
+- `quantity_unit` gains `km`
+
+Existing owner-only RLS still applies. `save_routine` / `duplicate_routine` write `user_id` from `auth.uid()` and persist the new fields.
+
 ## Manual two-user test — Explore
 
 Run this after Phase 1–6 versions are recorded and `20261107160000_explore_catalog.sql` has been applied once. Do not re-apply earlier migrations.
