@@ -134,6 +134,12 @@ Run this after `20261107140000_profile_prefs.sql` has been applied once. Confirm
 2. As User B, confirm B cannot select or update A’s profile row (0 rows affected), and B’s own theme/units remain independent.
 3. Sign out; confirm `/app/profile` redirects to `/login`.
 
+## Live timers (Phase 7)
+
+No schema or policy changes. All nine formats use the same owner-only `workout_sessions` / `session_section_results` policies. Timer display for EMOM / Tabata / Intervals derives phase from persisted section timestamps + format config; do not treat a UI tick as elapsed source of truth.
+
+Manual two-user session checks from Phase 4 still apply. Optionally also start a multi-section routine that includes EMOM or Tabata, confirm WORK/REST labels and that a mid-section refresh restores the correct phase remaining time.
+
 ## Session rules
 
 - Never put the service role key in client bundles or `NEXT_PUBLIC_*`.

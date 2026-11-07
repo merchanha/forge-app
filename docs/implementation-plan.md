@@ -1,7 +1,7 @@
 # FORGE — Discovery & Implementation Plan
 
 Planning document produced from product, design, and technical discovery.
-**Status:** Phase 0–6 implemented. Awaiting approval before Phase 7.
+**Status:** Phase 0–7 implemented. Awaiting approval before Phase 8.
 **Approved decisions:** see [`docs/approved-decisions.md`](./approved-decisions.md).
 
 **Sources reviewed:** `START-HERE-PROMPT.md`, `product-overview.md`, `.cursorrules`, `.cursor/rules/forge-engineering.mdc`, `README.md`, `design/FORGE.html`.
@@ -369,9 +369,13 @@ Do **not** wait for 100% coverage before shipping the vertical slice; lock the i
 - **Security:** Profile updates stay owner-only (`profiles_update_own`). Server Actions call `getUser()` and write `id` from that session.
 - **Acceptance:** Theme survives reload; units default kg; desktop layouts denser without redesigning mobile; Progressive sparkline only for filtered routine history with comparable scores; lint, typecheck, unit tests, and production build pass.
 
-### Phase 7 — Remaining timer formats + polish
+### Phase 7 — Remaining timer formats + polish *(implemented)*
 
-- EMOM, Tabata, Intervals, RFT, Running; multi-section advance UX; empty/error states.
+- **Outcome:** Live timer UX for EMOM, Tabata, Intervals, Rounds for Time, and Running alongside the Phase 4 formats. Manual multi-section advance shows next-section context; empty/error/loading polish on session routes.
+- **Non-goals:** Explore, Google OAuth, AI Coach, desktop timer parity beyond existing responsive shell, per-interval result log arrays.
+- **DB:** None. Reuse existing session/result JSONB shapes. Confirm Phase 1–6 versions in `schema_migrations` before any future migration; do not invent a Phase 7 schema file for bookkeeping.
+- **Security:** No new tables or policies. Timer math remains pure/unit-tested; Server Actions and owner-only RLS unchanged.
+- **Acceptance:** Pause/resume/refresh restores correct remaining/elapsed/phase for interval formats; all nine formats have live UX; lint, typecheck, unit tests, and production build pass.
 
 ### Phase 8 — Explore seed (optional)
 

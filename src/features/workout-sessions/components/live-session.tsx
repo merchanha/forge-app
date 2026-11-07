@@ -26,11 +26,13 @@ import {
   setSessionScalingAction,
   type SessionActionState,
 } from "@/features/workout-sessions/actions";
-import { hasLiveTimerUx } from "@/features/workout-sessions/lifecycle";
 import type { WorkoutSessionDetail } from "@/features/workout-sessions/queries";
 import {
+  deriveEmomPhase,
+  deriveWorkRestPhase,
   elapsedMs,
   formatClockMs,
+  formatPaceSecondsPerKm,
   remainingMs,
   timerStateFromPersistence,
 } from "@/features/workout-sessions/timer";
@@ -42,20 +44,53 @@ import {
 
 const idleState: SessionActionState = { error: null, success: false };
 
+/**
+ * Stable clock store for useSyncExternalStore.
+ * getSnapshot must return the same value between store updates — returning
+ * Date.now() directly causes an infinite re-render loop.
+ */
+let clockNowMs = 0;
+const clockListeners = new Set<() => void>();
+let clockIntervalId: number | null = null;
+
+function emitClock() {
+  clockNowMs = Date.now();
+  for (const listener of clockListeners) {
+    listener();
+  }
+}
+
+function ensureClockTicking() {
+  if (clockIntervalId != null || typeof window === "undefined") {
+    return;
+  }
+  clockNowMs = Date.now();
+  clockIntervalId = window.setInterval(emitClock, 250);
+  document.addEventListener("visibilitychange", emitClock);
+  window.addEventListener("focus", emitClock);
+}
+
+function stopClockIfIdle() {
+  if (clockListeners.size > 0 || clockIntervalId == null) {
+    return;
+  }
+  window.clearInterval(clockIntervalId);
+  clockIntervalId = null;
+  document.removeEventListener("visibilitychange", emitClock);
+  window.removeEventListener("focus", emitClock);
+}
+
 function subscribeClock(onStoreChange: () => void) {
-  const id = window.setInterval(onStoreChange, 250);
-  const onVisibility = () => onStoreChange();
-  document.addEventListener("visibilitychange", onVisibility);
-  window.addEventListener("focus", onVisibility);
+  ensureClockTicking();
+  clockListeners.add(onStoreChange);
   return () => {
-    window.clearInterval(id);
-    document.removeEventListener("visibilitychange", onVisibility);
-    window.removeEventListener("focus", onVisibility);
+    clockListeners.delete(onStoreChange);
+    stopClockIfIdle();
   };
 }
 
 function getClockSnapshot() {
-  return Date.now();
+  return clockNowMs;
 }
 
 function getServerClockSnapshot() {
@@ -84,38 +119,92 @@ function loadLabel(
   return `${loadValue} ${loadUnit}`;
 }
 
+function initialResultForSection(
+  section: WorkoutSessionDetail["snapshot"]["sections"][number] | undefined,
+  existing: SectionResult | undefined,
+): SectionResult {
+  if (existing) {
+    return existing;
+  }
+  if (!section) {
+    return defaultSectionResult("custom");
+  }
+  if (section.format === "strength") {
+    const config = section.formatConfig as FormatConfigMap["strength"];
+    return {
+      format: "strength",
+      sets: Array.from({ length: config.sets }, (_, setIndex) => ({
+        setIndex,
+        reps: config.reps,
+        loadValue: section.exercises[0]?.loadValue ?? null,
+        loadUnit: section.exercises[0]?.loadUnit ?? null,
+        completed: false,
+      })),
+    };
+  }
+  if (section.format === "running") {
+    const config = section.formatConfig as FormatConfigMap["running"];
+    return {
+      format: "running",
+      durationMs: null,
+      distanceMeters: config.distanceMeters,
+      notes: "",
+    };
+  }
+  return defaultSectionResult(section.format);
+}
+
+function finalizeResult(
+  result: SectionResult,
+  elapsed: number,
+  section: WorkoutSessionDetail["snapshot"]["sections"][number],
+): SectionResult {
+  switch (result.format) {
+    case "custom":
+      return { ...result, durationMs: elapsed };
+    case "for_time":
+      if (result.completionMs != null) {
+        return result;
+      }
+      return { ...result, completionMs: elapsed, capped: false };
+    case "rounds_for_time":
+      if (result.completionMs != null) {
+        return result;
+      }
+      return { ...result, completionMs: elapsed, capped: false };
+    case "running": {
+      const config = section.formatConfig as FormatConfigMap["running"];
+      return {
+        ...result,
+        durationMs: result.durationMs ?? elapsed,
+        distanceMeters: result.distanceMeters ?? config.distanceMeters,
+      };
+    }
+    case "emom":
+    case "tabata":
+    case "intervals":
+      return { ...result, completed: true };
+    default:
+      return result;
+  }
+}
+
 export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
   const router = useRouter();
   const section = session.snapshot.sections[session.currentSectionIndex];
   const sectionCount = session.snapshot.sections.length;
   const isLastSection = session.currentSectionIndex >= sectionCount - 1;
+  const nextSection = !isLastSection
+    ? session.snapshot.sections[session.currentSectionIndex + 1]
+    : undefined;
 
   const existing = session.sectionResults.find(
     (row) => row.sectionIndex === session.currentSectionIndex,
   );
 
-  const [result, setResult] = useState<SectionResult>(() => {
-    if (existing) {
-      return existing.result;
-    }
-    if (!section) {
-      return defaultSectionResult("custom");
-    }
-    if (section.format === "strength") {
-      const config = section.formatConfig as FormatConfigMap["strength"];
-      return {
-        format: "strength",
-        sets: Array.from({ length: config.sets }, (_, setIndex) => ({
-          setIndex,
-          reps: config.reps,
-          loadValue: section.exercises[0]?.loadValue ?? null,
-          loadUnit: section.exercises[0]?.loadUnit ?? null,
-          completed: false,
-        })),
-      };
-    }
-    return defaultSectionResult(section.format);
-  });
+  const [result, setResult] = useState<SectionResult>(() =>
+    initialResultForSection(section, existing?.result),
+  );
 
   const nowMs = useSyncExternalStore(
     subscribeClock,
@@ -165,20 +254,42 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
       }
     };
     document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("focus", refreshSession);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("focus", refreshSession);
     };
   }, []);
 
+  // Refresh once after a successful advance so the next section props load.
+  // Do not also refresh on focus mount — that remounts and can loop.
+  useEffect(() => {
+    if (advanceState.success) {
+      refreshSession();
+    }
+  }, [advanceState.success]);
+
   if (!section) {
     return (
-      <p className="text-sm text-[#ff8f6b]" role="alert">
-        This session snapshot has no sections.
-      </p>
+      <div className="mx-auto flex w-full max-w-md flex-col gap-3">
+        <p className="text-sm text-[#ff8f6b]" role="alert">
+          This session snapshot has no sections.
+        </p>
+        <p className="text-muted text-sm">
+          Discard this workout and start again from My Training.
+        </p>
+        <form action={abandonAction}>
+          <input type="hidden" name="sessionId" value={session.id} />
+          <button
+            type="submit"
+            className="border-border min-h-12 w-full rounded-md border font-semibold text-[#ff8f6b]"
+          >
+            <PendingLabel idle="Discard workout" pending="Discarding…" />
+          </button>
+        </form>
+      </div>
     );
   }
+
+  const activeSection = section;
 
   const timerState = timerStateFromPersistence({
     currentSectionStartedAt: session.currentSectionStartedAt,
@@ -188,7 +299,7 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
   const isPaused = session.pausedAt != null;
   const elapsed = timerState ? elapsedMs(timerState, nowMs) : 0;
 
-  const format = section.format;
+  const format = activeSection.format;
 
   let clockLabel = "WORK";
   let clockColor = "text-work";
@@ -197,7 +308,8 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
 
   if (format === "amrap") {
     const durationMs =
-      (section.formatConfig as FormatConfigMap["amrap"]).durationSeconds * 1000;
+      (activeSection.formatConfig as FormatConfigMap["amrap"]).durationSeconds *
+      1000;
     const remaining = timerState
       ? remainingMs(timerState, durationMs, nowMs)
       : durationMs;
@@ -209,7 +321,7 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
       scoreLine = `${result.rounds} rounds + ${result.additionalReps} reps`;
     }
   } else if (format === "for_time") {
-    const config = section.formatConfig as FormatConfigMap["for_time"];
+    const config = activeSection.formatConfig as FormatConfigMap["for_time"];
     const capped =
       config.timeCapSeconds != null && elapsed >= config.timeCapSeconds * 1000;
     clockLabel = capped ? "CAP" : isPaused ? "PAUSED" : "FOR TIME";
@@ -218,8 +330,22 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
     if (result.format === "for_time" && result.completionMs != null) {
       scoreLine = `Finished ${formatClockMs(result.completionMs)}`;
     }
+  } else if (format === "rounds_for_time") {
+    const config =
+      activeSection.formatConfig as FormatConfigMap["rounds_for_time"];
+    const capped =
+      config.timeCapSeconds != null && elapsed >= config.timeCapSeconds * 1000;
+    clockLabel = capped ? "CAP" : isPaused ? "PAUSED" : "RFT";
+    clockColor = capped ? "text-done" : isPaused ? "text-rest" : "text-work";
+    clockDisplay = formatClockMs(elapsed);
+    if (result.format === "rounds_for_time") {
+      scoreLine =
+        result.completionMs != null
+          ? `Finished ${formatClockMs(result.completionMs)} · ${config.rounds} rounds`
+          : `${config.rounds} rounds`;
+    }
   } else if (format === "custom") {
-    const config = section.formatConfig as FormatConfigMap["custom"];
+    const config = activeSection.formatConfig as FormatConfigMap["custom"];
     if (config.timerMode === "countdown") {
       const remaining = timerState
         ? remainingMs(timerState, config.durationSeconds * 1000, nowMs)
@@ -241,14 +367,60 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
     clockLabel = isPaused ? "PAUSED" : "STRENGTH";
     clockColor = isPaused ? "text-rest" : "text-muted";
     clockDisplay = formatClockMs(elapsed);
-  } else {
-    clockLabel = isPaused ? "PAUSED" : workoutFormatLabels[format].toUpperCase();
-    clockColor = isPaused ? "text-rest" : "text-muted";
+  } else if (format === "emom") {
+    const config = activeSection.formatConfig as FormatConfigMap["emom"];
+    const phase = deriveEmomPhase(elapsed, config);
+    if (phase.kind === "done") {
+      clockLabel = "DONE";
+      clockColor = "text-done";
+      clockDisplay = "0:00";
+      scoreLine = `${phase.totalIntervals} intervals complete`;
+    } else {
+      clockDisplay = formatClockMs(phase.remainingInIntervalMs);
+      clockLabel = isPaused ? "PAUSED" : "EMOM";
+      clockColor = isPaused ? "text-rest" : "text-work";
+      scoreLine = `Minute ${phase.intervalIndex}/${phase.totalIntervals} · ${formatClockMs(phase.remainingTotalMs)} left`;
+    }
+  } else if (format === "tabata" || format === "intervals") {
+    const config = activeSection.formatConfig as FormatConfigMap[
+      | "tabata"
+      | "intervals"
+    ];
+    const phase = deriveWorkRestPhase(elapsed, config);
+    if (phase.kind === "done") {
+      clockLabel = "DONE";
+      clockColor = "text-done";
+      clockDisplay = "0:00";
+      scoreLine = `${phase.totalRounds} rounds complete`;
+    } else if (phase.kind === "rest") {
+      clockDisplay = formatClockMs(phase.remainingInPhaseMs);
+      clockLabel = isPaused ? "PAUSED" : "REST";
+      clockColor = "text-rest";
+      scoreLine = `Round ${phase.round}/${phase.totalRounds}`;
+    } else {
+      clockDisplay = formatClockMs(phase.remainingInPhaseMs);
+      clockLabel = isPaused ? "PAUSED" : "WORK";
+      clockColor = isPaused ? "text-rest" : "text-work";
+      scoreLine = `Round ${phase.round}/${phase.totalRounds}`;
+    }
+  } else if (format === "running") {
+    const config = activeSection.formatConfig as FormatConfigMap["running"];
+    clockLabel = isPaused ? "PAUSED" : "RUN";
+    clockColor = isPaused ? "text-rest" : "text-work";
     clockDisplay = formatClockMs(elapsed);
+    const pace =
+      config.targetPaceSecondsPerKm != null
+        ? formatPaceSecondsPerKm(config.targetPaceSecondsPerKm)
+        : null;
+    if (result.format === "running" && result.durationMs != null) {
+      scoreLine = `Finished ${formatClockMs(result.durationMs)} · ${result.distanceMeters ?? config.distanceMeters} m`;
+    } else {
+      scoreLine = [`${config.distanceMeters} m`, pace].filter(Boolean).join(" · ");
+    }
   }
 
-  const currentExercise = section.exercises[0];
-  const nextExercise = section.exercises[1];
+  const currentExercise = activeSection.exercises[0];
+  const nextExercise = activeSection.exercises[1];
   const actionError =
     pauseState.error ||
     resumeState.error ||
@@ -257,6 +429,11 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
     advanceState.error ||
     completeState.error ||
     abandonState.error;
+  const actionSuccess =
+    progressState.success || advanceState.success || scalingState.success;
+
+  const finalized = finalizeResult(result, elapsed, activeSection);
+  const finalizedJson = JSON.stringify(finalized);
 
   function bumpAmrap(kind: "round" | "rep") {
     setResult((prev) => {
@@ -278,6 +455,28 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
     });
   }
 
+  function markRftDone() {
+    setResult((prev) => ({
+      format: "rounds_for_time",
+      completionMs: elapsed,
+      capped: false,
+      notes: prev.format === "rounds_for_time" ? prev.notes : "",
+    }));
+  }
+
+  function markRunningDone() {
+    const config = activeSection.formatConfig as FormatConfigMap["running"];
+    setResult((prev) => ({
+      format: "running",
+      durationMs: elapsed,
+      distanceMeters:
+        prev.format === "running" && prev.distanceMeters != null
+          ? prev.distanceMeters
+          : config.distanceMeters,
+      notes: prev.format === "running" ? prev.notes : "",
+    }));
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
@@ -287,13 +486,13 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <h1 className="font-display text-2xl font-extrabold uppercase">
-              {session.currentSectionIndex + 1} · {section.name}
+              {session.currentSectionIndex + 1} · {activeSection.name}
             </h1>
             <span className="bg-accent text-ground rounded-pill px-2 py-1 text-[11px] font-extrabold">
               {workoutFormatLabels[format]}{" "}
               {formatConfigSummary(
                 format,
-                section.formatConfig as FormatConfigMap[WorkoutFormat],
+                activeSection.formatConfig as FormatConfigMap[WorkoutFormat],
               )}
             </span>
           </div>
@@ -333,6 +532,15 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
         ))}
       </div>
 
+      {sectionCount > 1 ? (
+        <p className="text-muted text-xs">
+          Section {session.currentSectionIndex + 1} of {sectionCount}
+          {nextSection
+            ? ` · Next up: ${nextSection.name} (${workoutFormatLabels[nextSection.format]})`
+            : " · Last section"}
+        </p>
+      ) : null}
+
       <div className="flex flex-col items-center pt-1">
         <p
           className={`text-xs font-bold tracking-[0.14em] uppercase ${clockColor}`}
@@ -353,12 +561,14 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
         ) : null}
       </div>
 
-      {section.exercises.length > 0 ? (
+      {activeSection.exercises.length > 0 ? (
         <div className="border-border bg-surface flex flex-col gap-1.5 rounded-lg border px-4 py-3.5">
           <p className="text-muted text-xs">
             {format === "amrap" && result.format === "amrap"
               ? `Round ${result.rounds + 1} · now`
-              : "Now"}
+              : format === "emom"
+                ? "This minute"
+                : "Now"}
           </p>
           <div className="flex items-center justify-between gap-2.5">
             <p className="font-display text-[30px] leading-none font-extrabold uppercase">
@@ -385,11 +595,21 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
             <p className="text-muted text-[13px]">
               Next: {nextExercise.exerciseName}
             </p>
-          ) : session.currentSectionIndex < sectionCount - 1 ? (
+          ) : nextSection ? (
             <p className="text-muted text-[13px]">
-              Next: {session.snapshot.sections[session.currentSectionIndex + 1]?.name}
+              Next section: {nextSection.name}
             </p>
           ) : null}
+        </div>
+      ) : nextSection ? (
+        <div className="border-border bg-surface rounded-lg border px-4 py-3">
+          <p className="text-muted text-xs">Up next after this section</p>
+          <p className="font-display mt-1 text-xl font-extrabold uppercase">
+            {nextSection.name}
+          </p>
+          <p className="text-muted text-sm">
+            {workoutFormatLabels[nextSection.format]}
+          </p>
         </div>
       ) : null}
 
@@ -421,6 +641,32 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
         >
           {result.completionMs != null ? "Time recorded" : "Finish now"}
         </button>
+      ) : null}
+
+      {format === "rounds_for_time" && result.format === "rounds_for_time" ? (
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            className="bg-accent text-ground font-display min-h-16 rounded-xl text-2xl font-extrabold uppercase"
+            onClick={markRftDone}
+            disabled={result.completionMs != null}
+          >
+            {result.completionMs != null ? "Time recorded" : "Finish now"}
+          </button>
+          <label className="flex flex-col gap-2">
+            <span className="text-muted text-sm font-semibold">Notes</span>
+            <textarea
+              className="border-border bg-surface min-h-20 rounded-md border px-3 py-2"
+              value={result.notes}
+              onChange={(event) =>
+                setResult({
+                  ...result,
+                  notes: event.target.value,
+                })
+              }
+            />
+          </label>
+        </div>
       ) : null}
 
       {format === "strength" && result.format === "strength" ? (
@@ -478,14 +724,68 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
         </label>
       ) : null}
 
-      {!hasLiveTimerUx(format) ? (
-        <div className="border-border bg-surface rounded-lg border px-4 py-3">
-          <p className="text-sm font-semibold">
-            Live timer for {workoutFormatLabels[format]} comes in a later phase.
-          </p>
-          <p className="text-muted mt-1 text-sm">
-            Track the section manually, then advance or finish.
-          </p>
+      {(format === "emom" || format === "tabata" || format === "intervals") &&
+      (result.format === "emom" ||
+        result.format === "tabata" ||
+        result.format === "intervals") ? (
+        <label className="flex flex-col gap-2">
+          <span className="text-muted text-sm font-semibold">Notes</span>
+          <textarea
+            className="border-border bg-surface min-h-20 rounded-md border px-3 py-2"
+            value={result.notes}
+            onChange={(event) =>
+              setResult({
+                ...result,
+                notes: event.target.value,
+                completed: true,
+              })
+            }
+          />
+        </label>
+      ) : null}
+
+      {format === "running" && result.format === "running" ? (
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            className="bg-accent text-ground font-display min-h-16 rounded-xl text-2xl font-extrabold uppercase"
+            onClick={markRunningDone}
+            disabled={result.durationMs != null}
+          >
+            {result.durationMs != null ? "Run recorded" : "Finish run"}
+          </button>
+          <label className="flex flex-col gap-2">
+            <span className="text-muted text-sm font-semibold">
+              Distance (m)
+            </span>
+            <input
+              type="number"
+              min={0}
+              className="border-border bg-surface min-h-12 rounded-md border px-3 py-2"
+              value={result.distanceMeters ?? ""}
+              onChange={(event) => {
+                const raw = event.target.value;
+                setResult({
+                  ...result,
+                  distanceMeters:
+                    raw === "" ? null : Math.max(0, Math.floor(Number(raw))),
+                });
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-2">
+            <span className="text-muted text-sm font-semibold">Notes</span>
+            <textarea
+              className="border-border bg-surface min-h-20 rounded-md border px-3 py-2"
+              value={result.notes}
+              onChange={(event) =>
+                setResult({
+                  ...result,
+                  notes: event.target.value,
+                })
+              }
+            />
+          </label>
         </div>
       ) : null}
 
@@ -546,7 +846,7 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
           </button>
         </form>
 
-        {!isLastSection ? (
+        {!isLastSection && nextSection ? (
           <form action={advanceAction}>
             <input type="hidden" name="sessionId" value={session.id} />
             <input
@@ -554,30 +854,28 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
               name="fromSectionIndex"
               value={session.currentSectionIndex}
             />
-            <input type="hidden" name="result" value={JSON.stringify(result)} />
+            <input type="hidden" name="result" value={finalizedJson} />
             <input type="hidden" name="elapsedMs" value={elapsed} />
             <button
               type="submit"
               className="bg-accent text-ground min-h-12 w-full rounded-md font-semibold"
             >
-              <PendingLabel idle="Next section" pending="Advancing…" />
+              <PendingLabel
+                idle={`Next: ${nextSection.name}`}
+                pending="Saving section…"
+              />
             </button>
+            <p className="text-muted mt-1.5 text-center text-xs">
+              Saves this section, then starts{" "}
+              {workoutFormatLabels[nextSection.format]} — clock resets for the
+              new section.
+            </p>
           </form>
         ) : (
           <form action={completeAction}>
             <input type="hidden" name="sessionId" value={session.id} />
             <input type="hidden" name="notes" value="" />
-            <input
-              type="hidden"
-              name="finalResult"
-              value={JSON.stringify(
-                result.format === "custom"
-                  ? { ...result, durationMs: elapsed }
-                  : result.format === "for_time" && result.completionMs == null
-                    ? { ...result, completionMs: elapsed, capped: false }
-                    : result,
-              )}
-            />
+            <input type="hidden" name="finalResult" value={finalizedJson} />
             <input type="hidden" name="finalElapsedMs" value={elapsed} />
             <button
               type="submit"
@@ -592,6 +890,12 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
       {actionError ? (
         <p className="text-sm text-[#ff8f6b]" role="alert">
           {actionError}
+        </p>
+      ) : null}
+
+      {actionSuccess && !actionError ? (
+        <p className="text-sm text-[#7BE0A4]" role="status">
+          Saved.
         </p>
       ) : null}
 
@@ -631,18 +935,13 @@ export function LiveSession({ session }: { session: WorkoutSessionDetail }) {
               End this workout?
             </h2>
             <p className="text-muted text-sm">
-              The clock is paused on your next action. Review and save what you
-              have, or keep going. Discard abandons this session without a
-              completed result.
+              Review and save what you have, or keep going. Discard abandons
+              this session without a completed result.
             </p>
             <form action={completeAction} className="flex flex-col gap-2">
               <input type="hidden" name="sessionId" value={session.id} />
               <input type="hidden" name="notes" value="" />
-              <input
-                type="hidden"
-                name="finalResult"
-                value={JSON.stringify(result)}
-              />
+              <input type="hidden" name="finalResult" value={finalizedJson} />
               <input type="hidden" name="finalElapsedMs" value={elapsed} />
               <button
                 type="submit"

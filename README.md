@@ -6,8 +6,8 @@ Fitness training application: create routines, execute format-aware workouts, an
 
 ## Current status
 
-**Phase 6 complete (profile prefs, theme, responsive desktop layouts).**  
-Email/password auth, cookie sessions, profiles, exercises, routines, workout sessions, and history/compare are in place. Athletes can set units (kg/lb), dark/light theme, and basic training prefs; desktop hub/builder/progress layouts densify at large breakpoints while mobile stays compact. Explore, Google OAuth, AI Coach, and remaining live timer formats remain later.
+**Phase 7 complete (remaining live timer formats + polish).**  
+Email/password auth, cookie sessions, profiles, exercises, routines, workout sessions, history/compare, and profile prefs/theme are in place. Live timers cover all nine formats (including EMOM, Tabata, Intervals, RFT, Running) with timestamp-based pause/resume/refresh survival and manual multi-section advance. Explore, Google OAuth, and AI Coach remain later.
 
 Product requirements: [`product-overview.md`](./product-overview.md)  
 Design source of truth: [`design/FORGE.html`](./design/FORGE.html)  
@@ -131,5 +131,5 @@ FORGE/
 
 ## Phase boundary
 
-**In Phase 6:** Profile prefs (units/theme/onboarding fields), light theme via design tokens, responsive desktop Dashboard/Builder/Progress layouts, owner-only profile updates.  
-**Out:** EMOM/Tabata/Intervals/Running/RFT live timers, Google OAuth, AI Coach, Explore, hosted video, social/payments.
+**In Phase 7:** Live timer UX for EMOM, Tabata, Intervals, Rounds for Time, and Running; multi-section advance polish; session empty/error/loading polish.  
+**Out:** Google OAuth, AI Coach, Explore, hosted video, social/payments.

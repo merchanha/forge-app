@@ -30,12 +30,17 @@ export function assertSessionTransition(
   }
 }
 
-/** Formats that get full live timer UX in Phase 4. */
+/** Formats with full live timer UX (Phase 4 + Phase 7). */
 export const liveTimerFormats = [
   "amrap",
   "for_time",
   "strength",
   "custom",
+  "emom",
+  "tabata",
+  "intervals",
+  "rounds_for_time",
+  "running",
 ] as const;
 
 export type LiveTimerFormat = (typeof liveTimerFormats)[number];

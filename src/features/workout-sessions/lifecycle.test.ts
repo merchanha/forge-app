@@ -25,13 +25,16 @@ describe("session lifecycle", () => {
 });
 
 describe("live timer formats", () => {
-  it("enables Phase 4 formats only", () => {
+  it("enables all nine formats", () => {
     expect(hasLiveTimerUx("amrap")).toBe(true);
     expect(hasLiveTimerUx("for_time")).toBe(true);
     expect(hasLiveTimerUx("strength")).toBe(true);
     expect(hasLiveTimerUx("custom")).toBe(true);
-    expect(hasLiveTimerUx("emom")).toBe(false);
-    expect(hasLiveTimerUx("tabata")).toBe(false);
+    expect(hasLiveTimerUx("emom")).toBe(true);
+    expect(hasLiveTimerUx("tabata")).toBe(true);
+    expect(hasLiveTimerUx("intervals")).toBe(true);
+    expect(hasLiveTimerUx("rounds_for_time")).toBe(true);
+    expect(hasLiveTimerUx("running")).toBe(true);
   });
 });
 

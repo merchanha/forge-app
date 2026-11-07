@@ -57,9 +57,20 @@ async function ReviewContent({
   return <SessionResultsPanel view={view} />;
 }
 
+function ReviewLoading() {
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-col gap-3 py-6">
+      <p className="text-muted text-sm font-semibold tracking-wide uppercase">
+        Results
+      </p>
+      <p className="text-muted text-sm">Loading session review…</p>
+    </div>
+  );
+}
+
 export default function SessionReviewPage({ params }: ReviewPageProps) {
   return (
-    <Suspense fallback={<p className="text-muted">Loading review…</p>}>
+    <Suspense fallback={<ReviewLoading />}>
       <ReviewContent params={params} />
     </Suspense>
   );

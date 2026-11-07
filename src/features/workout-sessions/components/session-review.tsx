@@ -16,6 +16,7 @@ function resultSummary(result: SectionResult): string {
     case "amrap":
       return `${result.rounds} rounds + ${result.additionalReps} reps`;
     case "for_time":
+    case "rounds_for_time":
       return result.completionMs == null
         ? result.capped
           ? "Capped"
@@ -40,8 +41,14 @@ function resultSummary(result: SectionResult): string {
       ]
         .filter(Boolean)
         .join(" · ") || "Logged";
-    default:
-      return result.notes?.trim() ? result.notes : "Completed";
+    case "emom":
+    case "tabata":
+    case "intervals":
+      return result.notes.trim()
+        ? result.notes
+        : result.completed
+          ? "Completed"
+          : "Logged";
   }
 }
 

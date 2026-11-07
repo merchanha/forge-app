@@ -84,3 +84,11 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - Responsive desktop layouts for Dashboard, Builder, and Progress/History follow the design boards; mobile remains the primary compact layout. Explore and AI Coach stay hidden.
 - Progress sparkline reuses `src/features/performance` metric-aware scores for a selected routine; no Fran entity graph.
 - Explore, Google OAuth, AI Coach, and remaining live timer formats stay out of this phase.
+
+## Phase 7 engineering
+
+- Remaining live timers live in `src/features/workout-sessions` (reuse shared timer helpers). Do not import another feature’s internals.
+- Live timer UX for all nine formats: AMRAP, For Time, Strength, Custom, EMOM, Tabata, Intervals, Rounds for Time, Running.
+- EMOM / Tabata / Intervals derive WORK / REST / DONE (and interval/round index) from active elapsed ms + format config. UI may refresh on an interval; elapsed remains timestamp-based.
+- Multi-section sessions stay manual: next-section preview on the advance control; section clock resets via persisted `current_section_started_at`.
+- No schema migration in this phase. Explore, Google OAuth, and AI Coach stay out.

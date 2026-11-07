@@ -46,12 +46,28 @@ async function SessionContent({
     );
   }
 
-  return <LiveSession session={session} />;
+  return (
+    <LiveSession
+      key={`${session.id}:${session.currentSectionIndex}`}
+      session={session}
+    />
+  );
+}
+
+function SessionLoading() {
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-col gap-3 py-6">
+      <p className="text-muted text-sm font-semibold tracking-wide uppercase">
+        Live workout
+      </p>
+      <p className="text-muted text-sm">Loading session clock…</p>
+    </div>
+  );
 }
 
 export default function SessionPage({ params }: SessionPageProps) {
   return (
-    <Suspense fallback={<p className="text-muted">Loading workout…</p>}>
+    <Suspense fallback={<SessionLoading />}>
       <SessionContent params={params} />
     </Suspense>
   );
