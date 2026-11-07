@@ -15,8 +15,7 @@ async function AppHomeContent() {
           Hey {name}
         </h1>
         <p className="text-muted">
-          Your exercise library is ready. Routines and workouts arrive in later
-          phases.
+          Build routines in My Training. Live workouts arrive in Phase 4.
         </p>
       </header>
 
@@ -25,8 +24,14 @@ async function AppHomeContent() {
           Quick links
         </h2>
         <Link
-          href="/app/exercises"
+          href="/app/routines"
           className="bg-accent text-ground inline-flex min-h-12 items-center justify-center rounded-md px-4 font-semibold"
+        >
+          Open My Training
+        </Link>
+        <Link
+          href="/app/exercises"
+          className="border-border text-ink inline-flex min-h-12 items-center justify-center rounded-md border px-4 font-semibold"
         >
           Open exercises
         </Link>

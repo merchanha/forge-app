@@ -1,7 +1,7 @@
 # FORGE — Discovery & Implementation Plan
 
 Planning document produced from product, design, and technical discovery.
-**Status:** Phase 0–2 implemented. Awaiting approval before Phase 3.
+**Status:** Phase 0–3 implemented. Awaiting approval before Phase 4.
 **Approved decisions:** see [`docs/approved-decisions.md`](./approved-decisions.md).
 
 **Sources reviewed:** `START-HERE-PROMPT.md`, `product-overview.md`, `.cursorrules`, `.cursor/rules/forge-engineering.mdc`, `README.md`, `design/FORGE.html`.
@@ -337,12 +337,13 @@ Do **not** wait for 100% coverage before shipping the vertical slice; lock the i
 - **Security:** Server Actions call `getUser()` and write `user_id` from that session. Policies use `(select auth.uid())` and `to authenticated`.
 - **Acceptance:** Zod unit tests cover field and demo-URL rules. The two-user RLS checklist in `docs/security-rls.md` is run after the migration is applied once. Lint, typecheck, unit tests, and the production build pass.
 
-### Phase 3 — Routines + multi-section builder (mobile-first UI)
+### Phase 3 — Routines + multi-section builder (mobile-first UI) *(implemented)*
 
-- **Outcome:** Create/edit/save routines with ordered sections and format-specific config; duplicate/archive/favorite; search.
-- **Non-goals:** Perfect desktop builder parity, Explore catalog, AI.
-- **DB:** `routines`, `routine_sections`, `routine_exercises`.
-- **Acceptance:** All 9 formats validate; invalid configs rejected server-side; UI follows builder screens.
+- **Outcome:** Create/edit/save routines with ordered sections and format-specific config; duplicate/archive/favorite; search. Mobile builder at `/app/routines` follows board “4-5 · Routine builder”.
+- **Non-goals:** Perfect desktop builder parity, Explore catalog, AI, sessions/timers.
+- **DB:** `routines`, `routine_sections`, `routine_exercises` in `supabase/migrations/20261106223000_routines.sql`, plus owner-only RLS and `save_routine` / `duplicate_routine` invoker RPCs. Do not edit or re-apply earlier migrations.
+- **Security:** Server Actions call `getUser()` and ignore client-supplied user ids. Child rows are owner-scoped via denormalized `user_id` and composite FKs. Format configs validated by Zod and `is_valid_format_config`.
+- **Acceptance:** All 9 formats validate; invalid configs rejected server-side; two-user RLS checklist in `docs/security-rls.md`; lint, typecheck, unit tests, and production build pass.
 
 ### Phase 4 — Workout sessions + reliable timer *(core risk phase)*
 

@@ -28,6 +28,9 @@ async function AuthenticatedShell({ children }: { children: ReactNode }) {
           <Link href="/app" className="text-muted hover:text-ink">
             Hub
           </Link>
+          <Link href="/app/routines" className="text-muted hover:text-ink">
+            Training
+          </Link>
           <Link href="/app/exercises" className="text-muted hover:text-ink">
             Exercises
           </Link>

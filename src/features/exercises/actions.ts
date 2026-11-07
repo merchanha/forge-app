@@ -160,6 +160,16 @@ export async function deleteExerciseAction(
     .maybeSingle();
 
   if (error) {
+    if (
+      error.code === "23503" ||
+      error.message.includes("routine_exercises_exercise_owner_fkey")
+    ) {
+      return {
+        error:
+          "This exercise is used in a routine. Remove it from your routines first.",
+        success: false,
+      };
+    }
     return { error: "Could not delete this exercise.", success: false };
   }
   if (!data) {

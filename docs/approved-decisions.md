@@ -46,3 +46,12 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - Each athlete receives a private copy of eight starter exercises on signup. Existing athletes are backfilled once.
 - Demo media is an optional https YouTube or Vimeo URL. The server does not fetch it.
 - Routines, sessions, timers, Explore, Google OAuth, and AI Coach stay out of this phase.
+
+## Phase 3 engineering
+
+- Routines live in `src/features/routines` and `public.routines` / `routine_sections` / `routine_exercises`.
+- A routine is a template only. Session snapshots and timers stay in Phase 4.
+- Each section has one of nine formats with a Zod- and database-validated `format_config`.
+- Sections reorder with ▲ / ▼ controls (no drag-and-drop). Movements reference the athlete’s own exercises.
+- Load units are stored explicitly on each routine exercise (`kg` or `lb`).
+- Explore, Google OAuth, workout sessions, timers, and AI Coach stay out of this phase.

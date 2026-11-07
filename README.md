@@ -6,8 +6,8 @@ Fitness training application: create routines, execute format-aware workouts, an
 
 ## Current status
 
-**Phase 2 complete (exercise library).**  
-Email/password auth, cookie sessions, profiles, and a protected `/app` shell are in place. Athletes can create, list, edit, and delete their own exercises, including a private starter set. Routines and workout sessions start in Phase 3+.
+**Phase 3 complete (routines + multi-section builder).**  
+Email/password auth, cookie sessions, profiles, exercises, and a protected `/app` shell are in place. Athletes can create, list, edit, duplicate, archive, favorite, and delete their own routines with ordered sections and validated format configs. Workout sessions and timers start in Phase 4.
 
 Product requirements: [`product-overview.md`](./product-overview.md)  
 Design source of truth: [`design/FORGE.html`](./design/FORGE.html)  
@@ -58,14 +58,17 @@ Do **not** put the service role key in `NEXT_PUBLIC_*` or commit `.env.local`.
 
 ### Apply migrations once
 
-`supabase/migrations/20261104210000_profiles.sql` is already applied and recorded as version `20261104210000`. Do not run it again.
+These versions are already recorded in `supabase_migrations.schema_migrations` on the linked project. Do not re-run them:
 
-Phase 2 adds `supabase/migrations/20261106193000_exercises.sql`. Apply that new file once:
+- `20261104210000` / `profiles`
+- `20261106193000` / `exercises`
+
+Phase 3 adds `supabase/migrations/20261106223000_routines.sql`. Apply that new file once:
 
 - Push the migration and let the Supabase GitHub integration apply it. The integration records the version in `supabase_migrations.schema_migrations` and skips versions that are already recorded.
 - Or, with the CLI linked to this project, run `npx supabase db push` once. A later GitHub sync skips that recorded version.
 
-Do not paste the exercises SQL into the SQL editor and also let the integration apply the same unrecorded file. That applies it twice. Do not re-run the profiles migration.
+Do not paste the routines SQL into the SQL editor and also let the integration apply the same unrecorded file. That applies it twice. Do not re-run the profiles or exercises migrations.
 
 ### Auth settings (local MVP)
 
@@ -117,7 +120,8 @@ FORGE/
 │   ├── features/
 │   │   ├── auth/
 │   │   ├── exercises/
-│   │   └── profiles/
+│   │   ├── profiles/
+│   │   └── routines/
 │   ├── platform/supabase/  # SSR clients + types
 │   └── shared/             # Cross-cutting UI/theme
 ├── src/proxy.ts            # Session refresh + route guards (Next.js 16)
@@ -126,5 +130,5 @@ FORGE/
 
 ## Phase boundary
 
-**In Phase 2:** User-owned exercise CRUD, https YouTube/Vimeo demo links, owner-only RLS, and a private eight-exercise starter set at `/app/exercises`.  
-**Out:** Google OAuth, routines, sessions/timers, AI Coach, Explore, hosted video.
+**In Phase 3:** User-owned routine CRUD at `/app/routines`, ordered sections with all nine validated formats, prescriptions from the athlete’s exercise library, owner-only RLS, and the mobile builder from board “4-5 · Routine builder”.  
+**Out:** Google OAuth, workout sessions/timers, history/PRs, AI Coach, Explore, hosted video, full desktop builder parity.
