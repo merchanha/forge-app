@@ -1,14 +1,26 @@
 -- Phase 3: user-owned routines with ordered sections and format configs.
 -- Do not edit or re-apply 20261104210000_profiles.sql or 20261106193000_exercises.sql.
+--
+-- Idempotent on purpose: this schema was applied out-of-band on the linked project
+-- before schema_migrations recorded 20261106223000. Re-running must succeed so the
+-- migration runner can mark it applied, then continue to Phase 4.
 
-create type public.routine_category as enum (
+do $$
+begin
+  create type public.routine_category as enum (
   'crossfit',
   'hyrox',
   'running',
   'custom'
 );
+exception
+  when duplicate_object then null;
+end $$;
 
-create type public.workout_format as enum (
+
+do $$
+begin
+  create type public.workout_format as enum (
   'amrap',
   'emom',
   'for_time',
@@ -19,19 +31,34 @@ create type public.workout_format as enum (
   'running',
   'custom'
 );
+exception
+  when duplicate_object then null;
+end $$;
 
-create type public.quantity_unit as enum (
+
+do $$
+begin
+  create type public.quantity_unit as enum (
   'reps',
   'm',
   'cal',
   'min'
 );
+exception
+  when duplicate_object then null;
+end $$;
+
 
 -- Composite ownership keys for child FKs.
-alter table public.exercises
-  add constraint exercises_id_user_id_key unique (id, user_id);
+do $$
+begin
+  alter table public.exercises
+    add constraint exercises_id_user_id_key unique (id, user_id);
+exception
+  when duplicate_object then null;
+end $$;
 
-create table public.routines (
+create table if not exists public.routines (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   name text not null,
@@ -57,11 +84,11 @@ create table public.routines (
 comment on table public.routines is
   'Athlete-owned workout templates. Results are never stored here.';
 
-create index routines_user_id_archived_at_idx
+create index if not exists routines_user_id_archived_at_idx
   on public.routines (user_id, archived_at);
-create index routines_user_id_name_idx
+create index if not exists routines_user_id_name_idx
   on public.routines (user_id, name);
-create index routines_user_id_is_favorite_idx
+create index if not exists routines_user_id_is_favorite_idx
   on public.routines (user_id, is_favorite)
   where is_favorite = true;
 
@@ -75,6 +102,7 @@ begin
 end;
 $$;
 
+drop trigger if exists routines_set_updated_at on public.routines;
 create trigger routines_set_updated_at
 before update on public.routines
 for each row
@@ -279,7 +307,7 @@ begin
 end;
 $$;
 
-create table public.routine_sections (
+create table if not exists public.routine_sections (
   id uuid primary key default gen_random_uuid(),
   routine_id uuid not null,
   user_id uuid not null,
@@ -307,7 +335,7 @@ create table public.routine_sections (
 comment on table public.routine_sections is
   'Ordered parts of a routine. Each section has one validated workout format.';
 
-create index routine_sections_routine_id_sort_order_idx
+create index if not exists routine_sections_routine_id_sort_order_idx
   on public.routine_sections (routine_id, sort_order);
 
 create or replace function public.set_routine_sections_updated_at()
@@ -320,12 +348,13 @@ begin
 end;
 $$;
 
+drop trigger if exists routine_sections_set_updated_at on public.routine_sections;
 create trigger routine_sections_set_updated_at
 before update on public.routine_sections
 for each row
 execute function public.set_routine_sections_updated_at();
 
-create table public.routine_exercises (
+create table if not exists public.routine_exercises (
   id uuid primary key default gen_random_uuid(),
   section_id uuid not null,
   user_id uuid not null,
@@ -367,9 +396,9 @@ comment on table public.routine_exercises is
 comment on column public.routine_exercises.load_unit is
   'Explicit load unit. Never inferred from profile at read time.';
 
-create index routine_exercises_section_id_sort_order_idx
+create index if not exists routine_exercises_section_id_sort_order_idx
   on public.routine_exercises (section_id, sort_order);
-create index routine_exercises_exercise_id_idx
+create index if not exists routine_exercises_exercise_id_idx
   on public.routine_exercises (exercise_id);
 
 create or replace function public.set_routine_exercises_updated_at()
@@ -382,6 +411,7 @@ begin
 end;
 $$;
 
+drop trigger if exists routine_exercises_set_updated_at on public.routine_exercises;
 create trigger routine_exercises_set_updated_at
 before update on public.routine_exercises
 for each row
@@ -391,18 +421,21 @@ alter table public.routines enable row level security;
 alter table public.routine_sections enable row level security;
 alter table public.routine_exercises enable row level security;
 
+drop policy if exists "routines_select_own" on public.routines;
 create policy "routines_select_own"
 on public.routines
 for select
 to authenticated
 using ((select auth.uid()) = user_id);
 
+drop policy if exists "routines_insert_own" on public.routines;
 create policy "routines_insert_own"
 on public.routines
 for insert
 to authenticated
 with check ((select auth.uid()) = user_id);
 
+drop policy if exists "routines_update_own" on public.routines;
 create policy "routines_update_own"
 on public.routines
 for update
@@ -410,24 +443,28 @@ to authenticated
 using ((select auth.uid()) = user_id)
 with check ((select auth.uid()) = user_id);
 
+drop policy if exists "routines_delete_own" on public.routines;
 create policy "routines_delete_own"
 on public.routines
 for delete
 to authenticated
 using ((select auth.uid()) = user_id);
 
+drop policy if exists "routine_sections_select_own" on public.routine_sections;
 create policy "routine_sections_select_own"
 on public.routine_sections
 for select
 to authenticated
 using ((select auth.uid()) = user_id);
 
+drop policy if exists "routine_sections_insert_own" on public.routine_sections;
 create policy "routine_sections_insert_own"
 on public.routine_sections
 for insert
 to authenticated
 with check ((select auth.uid()) = user_id);
 
+drop policy if exists "routine_sections_update_own" on public.routine_sections;
 create policy "routine_sections_update_own"
 on public.routine_sections
 for update
@@ -435,24 +472,28 @@ to authenticated
 using ((select auth.uid()) = user_id)
 with check ((select auth.uid()) = user_id);
 
+drop policy if exists "routine_sections_delete_own" on public.routine_sections;
 create policy "routine_sections_delete_own"
 on public.routine_sections
 for delete
 to authenticated
 using ((select auth.uid()) = user_id);
 
+drop policy if exists "routine_exercises_select_own" on public.routine_exercises;
 create policy "routine_exercises_select_own"
 on public.routine_exercises
 for select
 to authenticated
 using ((select auth.uid()) = user_id);
 
+drop policy if exists "routine_exercises_insert_own" on public.routine_exercises;
 create policy "routine_exercises_insert_own"
 on public.routine_exercises
 for insert
 to authenticated
 with check ((select auth.uid()) = user_id);
 
+drop policy if exists "routine_exercises_update_own" on public.routine_exercises;
 create policy "routine_exercises_update_own"
 on public.routine_exercises
 for update
@@ -460,6 +501,7 @@ to authenticated
 using ((select auth.uid()) = user_id)
 with check ((select auth.uid()) = user_id);
 
+drop policy if exists "routine_exercises_delete_own" on public.routine_exercises;
 create policy "routine_exercises_delete_own"
 on public.routine_exercises
 for delete

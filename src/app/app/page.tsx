@@ -15,7 +15,8 @@ async function AppHomeContent() {
           Hey {name}
         </h1>
         <p className="text-muted">
-          Build routines in My Training. Live workouts arrive in Phase 4.
+          Build a routine, start a session, and finish with a review. History and
+          comparisons come next.
         </p>
       </header>
 

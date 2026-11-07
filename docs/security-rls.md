@@ -35,6 +35,19 @@ Composite foreign keys keep children on the same owner:
 
 `save_routine(jsonb)` and `duplicate_routine(uuid)` are `security invoker`, executable by `authenticated` only, and write `user_id` from `auth.uid()`. Format configs are checked by `is_valid_format_config` before insert. Deleting an exercise that is still referenced by a routine is blocked (`on delete restrict`).
 
+## Workout sessions (Phase 4)
+
+| Policy | Intent |
+|---|---|
+| `workout_sessions_*_own` | Owner-only select/insert/update/delete on `workout_sessions` |
+| `session_section_results_*_own` | Owner-only access; each row carries `user_id` |
+
+- `session_section_results (session_id, user_id) → workout_sessions (id, user_id)` on delete cascade
+- `routine_id` on sessions is nullable and uses `on delete set null` so deleting a template does not erase history
+- `routine_snapshot` is immutable JSONB frozen at start (`snapshotVersion: 1`)
+- Server Actions call `getUser()` and write `user_id` from that session. Never trust a client-supplied user id
+- Timer source of truth is persisted timestamps (`started_at`, `paused_at`, `total_paused_ms`, `current_section_started_at`), not a ticking counter
+
 ## Manual two-user test — profiles
 
 1. Create User A and User B (register twice).
@@ -63,6 +76,16 @@ Run this after `20261106223000_routines.sql` has been applied once. Do not re-ap
 3. Confirm adding another user’s exercise id is rejected, and deleting an exercise still used by a routine fails with a clear error.
 4. As User B, confirm B cannot list A’s routines, and direct select/update/delete of A’s routine, section, or routine-exercise ids affects 0 rows.
 5. Sign out; confirm `/app/routines` redirects to `/login`.
+
+## Manual two-user test — workout sessions
+
+Run this after `20261107010000_workout_sessions.sql` has been applied once. Confirm Phase 3 (`20261106223000`) is recorded in `schema_migrations` first. Do not re-apply earlier migrations.
+
+1. Sign in as User A. Start a workout from a multi-section routine that includes AMRAP. Confirm the live clock, pause/resume, `+1 Round` / `+1 Rep`, and that a mid-workout refresh restores the correct remaining/elapsed time.
+2. Advance to the next section manually, then finish and open the review page. Edit the routine template afterward and confirm the completed session review still shows the original snapshot.
+3. Start another session and discard it; confirm status becomes abandoned and you return to My Training.
+4. As User B, confirm B cannot select A’s `workout_sessions` or `session_section_results` rows, and direct update/delete of A’s session id affects 0 rows.
+5. Sign out; confirm `/app/sessions/<id>` redirects to `/login`.
 
 ## Session rules
 

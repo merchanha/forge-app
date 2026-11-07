@@ -1,7 +1,7 @@
 # FORGE — Discovery & Implementation Plan
 
 Planning document produced from product, design, and technical discovery.
-**Status:** Phase 0–3 implemented. Awaiting approval before Phase 4.
+**Status:** Phase 0–4 implemented. Awaiting approval before Phase 5.
 **Approved decisions:** see [`docs/approved-decisions.md`](./approved-decisions.md).
 
 **Sources reviewed:** `START-HERE-PROMPT.md`, `product-overview.md`, `.cursorrules`, `.cursor/rules/forge-engineering.mdc`, `README.md`, `design/FORGE.html`.
@@ -345,12 +345,13 @@ Do **not** wait for 100% coverage before shipping the vertical slice; lock the i
 - **Security:** Server Actions call `getUser()` and ignore client-supplied user ids. Child rows are owner-scoped via denormalized `user_id` and composite FKs. Format configs validated by Zod and `is_valid_format_config`.
 - **Acceptance:** All 9 formats validate; invalid configs rejected server-side; two-user RLS checklist in `docs/security-rls.md`; lint, typecheck, unit tests, and production build pass.
 
-### Phase 4 — Workout sessions + reliable timer *(core risk phase)*
+### Phase 4 — Workout sessions + reliable timer *(implemented)*
 
-- **Outcome:** Start session → snapshot → execute **AMRAP, For Time, Strength, Custom** with pause/resume/refresh survival → end → review.
-- **Non-goals:** Full EMOM/Tabata/Intervals/Running/RFT timer UX (schema ready; UI later).
-- **DB:** `workout_sessions`, `session_section_results`.
-- **Acceptance:** Refresh mid-AMRAP restores correct remaining/elapsed; template edit after complete does not change history.
+- **Outcome:** Start session → snapshot → execute **AMRAP, For Time, Strength, Custom** with pause/resume/refresh survival → end → review. Mobile live timer follows board “6 · Live timer”.
+- **Non-goals:** Full EMOM/Tabata/Intervals/Running/RFT timer UX (schema ready; UI later). Full history/compare/PRs (Phase 5). Desktop timer parity.
+- **DB:** `workout_sessions`, `session_section_results` in `supabase/migrations/20261107010000_workout_sessions.sql`, plus owner-only RLS. Phase 3 and Phase 4 migration files are idempotent so out-of-band schema can still be recorded by the migration runner. Do not re-apply profiles or exercises migrations.
+- **Security:** Server Actions call `getUser()` and write `user_id` from that session. Child rows are owner-scoped via denormalized `user_id` and composite FKs. Timer math is unit-tested as pure functions.
+- **Acceptance:** Refresh mid-AMRAP restores correct remaining/elapsed; template edit after complete does not change history; two-user RLS checklist in `docs/security-rls.md`; lint, typecheck, unit tests, and production build pass.
 
 ### Phase 5 — Results, history, basic comparisons
 

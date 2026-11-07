@@ -10,6 +10,7 @@ import {
   toggleFavoriteRoutineAction,
   type RoutineActionState,
 } from "@/features/routines/actions";
+import { StartWorkoutButton } from "@/features/workout-sessions/components/start-workout-button";
 
 const initialState: RoutineActionState = { error: null, success: false };
 
@@ -78,6 +79,16 @@ export function RoutineListActions({
 
       {open ? (
         <div className="border-border bg-raised absolute top-14 right-0 z-20 flex w-52 flex-col gap-1 rounded-lg border p-2 shadow-lg">
+          {!isArchived ? (
+            <div className="px-1 pt-1">
+              <StartWorkoutButton
+                routineId={routineId}
+                label="Start"
+                className="bg-accent text-ground inline-flex min-h-11 w-full items-center justify-center rounded-md px-3 text-sm font-semibold"
+              />
+            </div>
+          ) : null}
+
           <form action={favoriteAction}>
             <input type="hidden" name="id" value={routineId} />
             <input

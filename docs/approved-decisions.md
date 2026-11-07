@@ -55,3 +55,13 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - Sections reorder with ▲ / ▼ controls (no drag-and-drop). Movements reference the athlete’s own exercises.
 - Load units are stored explicitly on each routine exercise (`kg` or `lb`).
 - Explore, Google OAuth, workout sessions, timers, and AI Coach stay out of this phase.
+
+## Phase 4 engineering
+
+- Workout sessions live in `src/features/workout-sessions` and `public.workout_sessions` / `session_section_results`.
+- On start, freeze a full JSONB `routine_snapshot` (`snapshotVersion: 1`). Editing the routine later does not rewrite history.
+- Lifecycle: `planned` → `in_progress` → `completed` | `abandoned`. Start creates `in_progress`. Discard abandons unfinished work.
+- Timer source of truth is timestamps + monotonic clock while active (`started_at`, `paused_at`, `total_paused_ms`, `current_section_started_at`). UI may refresh on an interval; it must not invent elapsed time.
+- Live timer UX in this phase: AMRAP, For Time, Strength, Custom. Other formats show prescription + manual advance.
+- Multi-section sessions advance manually. Post-workout review reads the snapshot + section results only.
+- Explore, Google OAuth, history/compare/PRs, AI Coach, and desktop timer parity stay out of this phase.

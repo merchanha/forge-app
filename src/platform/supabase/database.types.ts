@@ -24,6 +24,14 @@ export type WorkoutFormat =
 
 export type QuantityUnit = "reps" | "m" | "cal" | "min";
 
+export type SessionStatus =
+  | "planned"
+  | "in_progress"
+  | "completed"
+  | "abandoned";
+
+export type SessionScaling = "rx" | "scaled";
+
 export type Json =
   | string
   | number
@@ -215,6 +223,105 @@ export type Database = {
         };
         Relationships: [];
       };
+      workout_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          routine_id: string | null;
+          status: SessionStatus;
+          scaling: SessionScaling;
+          routine_snapshot: Json;
+          notes: string;
+          current_section_index: number;
+          started_at: string | null;
+          paused_at: string | null;
+          total_paused_ms: number;
+          current_section_started_at: string | null;
+          completed_at: string | null;
+          abandoned_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          routine_id?: string | null;
+          status?: SessionStatus;
+          scaling?: SessionScaling;
+          routine_snapshot: Json;
+          notes?: string;
+          current_section_index?: number;
+          started_at?: string | null;
+          paused_at?: string | null;
+          total_paused_ms?: number;
+          current_section_started_at?: string | null;
+          completed_at?: string | null;
+          abandoned_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          routine_id?: string | null;
+          status?: SessionStatus;
+          scaling?: SessionScaling;
+          routine_snapshot?: Json;
+          notes?: string;
+          current_section_index?: number;
+          started_at?: string | null;
+          paused_at?: string | null;
+          total_paused_ms?: number;
+          current_section_started_at?: string | null;
+          completed_at?: string | null;
+          abandoned_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      session_section_results: {
+        Row: {
+          id: string;
+          user_id: string;
+          session_id: string;
+          section_index: number;
+          format: WorkoutFormat;
+          result: Json;
+          section_started_at: string | null;
+          section_ended_at: string | null;
+          elapsed_ms: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          session_id: string;
+          section_index: number;
+          format: WorkoutFormat;
+          result?: Json;
+          section_started_at?: string | null;
+          section_ended_at?: string | null;
+          elapsed_ms?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          session_id?: string;
+          section_index?: number;
+          format?: WorkoutFormat;
+          result?: Json;
+          section_started_at?: string | null;
+          section_ended_at?: string | null;
+          elapsed_ms?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -233,6 +340,8 @@ export type Database = {
       routine_category: RoutineCategory;
       workout_format: WorkoutFormat;
       quantity_unit: QuantityUnit;
+      session_status: SessionStatus;
+      session_scaling: SessionScaling;
     };
     CompositeTypes: Record<string, never>;
   };
@@ -245,3 +354,7 @@ export type RoutineSection =
   Database["public"]["Tables"]["routine_sections"]["Row"];
 export type RoutineExercise =
   Database["public"]["Tables"]["routine_exercises"]["Row"];
+export type WorkoutSession =
+  Database["public"]["Tables"]["workout_sessions"]["Row"];
+export type SessionSectionResult =
+  Database["public"]["Tables"]["session_section_results"]["Row"];

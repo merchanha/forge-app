@@ -30,6 +30,7 @@ import {
   type RoutineCategory,
   type WorkoutFormat,
 } from "@/features/routines/validation";
+import { StartWorkoutButton } from "@/features/workout-sessions/components/start-workout-button";
 import { SubmitButton } from "@/shared/ui/submit-button";
 import { TextArea } from "@/shared/ui/text-area";
 import { TextField } from "@/shared/ui/text-field";
@@ -756,6 +757,10 @@ export function RoutineBuilder({
           pendingLabel="Saving…"
         />
       </form>
+
+      {initial?.id ? (
+        <StartWorkoutButton routineId={initial.id} label="Start workout" />
+      ) : null}
 
       {sheet === "format" ? (
         <FormatSheet
