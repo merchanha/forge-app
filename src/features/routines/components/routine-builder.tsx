@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useRef, useState, useTransition } from "react";
+import { useActionState, useId, useState, useTransition } from "react";
 
 import { ensureOwnedExerciseAction } from "@/features/exercises/actions";
 import {
@@ -304,8 +304,8 @@ export function RoutineBuilder({
   initial,
 }: RoutineBuilderProps) {
   const formId = useId();
-  const payloadRef = useRef<HTMLInputElement>(null);
   const [state, formAction] = useActionState(saveRoutineAction, initialState);
+  const isEditing = Boolean(initial?.id);
   const [switching, startSwitch] = useTransition();
   const [library, setLibrary] =
     useState<LibraryExerciseOption[]>(initialExercises);
@@ -1033,13 +1033,11 @@ export function RoutineBuilder({
 
   const saveForm = (
     <form
-      action={formAction}
       className="flex flex-col gap-3"
-      onSubmit={(event) => {
+      action={(formData) => {
         const draft = buildPayload();
         const parsed = routineInputSchema.safeParse(draft);
         if (!parsed.success) {
-          event.preventDefault();
           setClientError(
             parsed.error.issues[0]?.message ??
               "Fix the routine before saving.",
@@ -1048,24 +1046,28 @@ export function RoutineBuilder({
           return;
         }
         setClientError(null);
-        if (payloadRef.current) {
-          payloadRef.current.value = JSON.stringify(parsed.data);
-        }
+        formData.set("payload", JSON.stringify(parsed.data));
+        formAction(formData);
       }}
     >
-      <input ref={payloadRef} type="hidden" name="payload" defaultValue="" />
       {(clientError || state.error) && (
         <p className="text-sm text-[#ff8f6b]" role="alert">
           {clientError ?? state.error}
         </p>
       )}
+      {state.success && !clientError && !state.error ? (
+        <p className="text-sm text-[#7BE0A4]" role="status">
+          Saved to My Training.
+        </p>
+      ) : null}
       <SubmitButton
-        idleLabel="Save to My Training"
+        idleLabel={isEditing ? "Save changes" : "Save to My Training"}
         pendingLabel="Saving…"
       />
       <p className="text-muted text-sm">
-        Saving creates a reusable template. Each workout you run is stored
-        separately in history.
+        {isEditing
+          ? "Update this template anytime. Past workout results stay unchanged."
+          : "Saving creates a reusable template. Each workout you run is stored separately in history."}
       </p>
     </form>
   );

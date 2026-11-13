@@ -1,7 +1,7 @@
 # FORGE — Discovery & Implementation Plan
 
 Planning document produced from product, design, and technical discovery.
-**Status:** Phase 0–7 implemented. Awaiting approval before Phase 8.
+**Status:** Phase 0–9 implemented (AI Coach).
 **Approved decisions:** see [`docs/approved-decisions.md`](./approved-decisions.md).
 
 **Sources reviewed:** `START-HERE-PROMPT.md`, `product-overview.md`, `.cursorrules`, `.cursor/rules/forge-engineering.mdc`, `README.md`, `design/FORGE.html`.
@@ -385,9 +385,13 @@ Do **not** wait for 100% coverage before shipping the vertical slice; lock the i
 - **Security:** Catalog is readable by authenticated users only; no user insert/update/delete. Copy writes `user_id` from `auth.uid()` and find-or-creates owned exercises by exact name.
 - **Acceptance:** Save creates a private routine copy; catalog unchanged; empty/loading/error polish; two-user RLS checklist in `docs/security-rls.md`; lint, typecheck, unit tests, and production build pass.
 
-### Phase 9 — AI Coach (explicitly later)
+### Phase 9 — AI Coach *(implemented)*
 
-- Server-side provider, validate drafts, user confirm before save; rate/cost limits.
+- **Outcome:** `/app/ai-coach` chat drafts routines from athlete prompts (design board 9). Provider-agnostic Vercel AI SDK (`stub` / OpenAI / Anthropic). Drafts are parsed, format-validated, shown for review; explicit Save to My Training or Edit → builder prefill. AI Coach is the 5th primary nav tab.
+- **Non-goals:** Google OAuth, medical advice, WhatsApp/email notifications, marketplace/social, persisted chat history.
+- **DB:** `ai_coach_usage` + `consume_ai_coach_request` in `supabase/migrations/20261108140000_ai_coach.sql`, owner-only RLS. Confirm Phase 1–8 versions are recorded (Phase 3–8 files are idempotent) before/with this push. Do not edit earlier migrations.
+- **Security:** Provider keys server-side only. Rate limit 10/user/day. Output validated against routine Zod + format rules before save. Prompt context minimizes PII.
+- **Acceptance:** Nothing persists without confirm; invalid/unavailable provider shows safe errors; lint, typecheck, unit tests, and production build pass.
 
 ---
 

@@ -86,6 +86,28 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    href: "/app/ai-coach",
+    label: "AI Coach",
+    match: (path: string) => path.startsWith("/app/ai-coach"),
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+        <circle cx="12" cy="12" r="4" />
+        <path d="M7.5 7.5l1.5 1.5M15 15l1.5 1.5M16.5 7.5L15 9M9 15l-1.5 1.5" />
+      </svg>
+    ),
+  },
 ] as const;
 
 export function shouldHideMobileTabBar(pathname: string): boolean {
@@ -112,7 +134,7 @@ export function AppShellNav({
     return (
       <nav
         aria-label="Primary"
-        className="border-border bg-surface grid grid-cols-4 border-t px-1.5 pt-1.5 pb-3.5"
+        className="border-border bg-surface grid grid-cols-5 border-t px-1.5 pt-1.5 pb-3.5"
       >
         {navItems.map((item) => {
           const active = item.match(pathname);

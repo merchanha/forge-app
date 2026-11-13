@@ -83,15 +83,39 @@ function mapSaveError(message: string | undefined): string {
   if (message.includes("Routine not found")) {
     return "Routine not found.";
   }
+  if (message.includes("load_pair") || message.includes("load_value")) {
+    return "Each loaded movement needs both a load and a unit.";
+  }
+  if (message.includes("check constraint") || message.includes("violates")) {
+    return "One field failed validation. Check loads, pace, and section formats.";
+  }
   return "Could not save this routine.";
+}
+
+function readRoutinePayload(formData: FormData): string | null {
+  const direct = formData.get("payload");
+  if (typeof direct === "string" && direct.trim().startsWith("{")) {
+    return direct;
+  }
+
+  for (const [key, value] of formData.entries()) {
+    if (typeof value !== "string" || !value.trim().startsWith("{")) {
+      continue;
+    }
+    if (key === "payload" || key.endsWith("_payload") || key.endsWith("payload")) {
+      return value;
+    }
+  }
+
+  return null;
 }
 
 export async function saveRoutineAction(
   _prev: RoutineActionState,
   formData: FormData,
 ): Promise<RoutineActionState> {
-  const raw = formData.get("payload");
-  if (typeof raw !== "string") {
+  const raw = readRoutinePayload(formData);
+  if (!raw) {
     return { error: "Invalid routine payload.", success: false };
   }
 
@@ -120,12 +144,25 @@ export async function saveRoutineAction(
   });
 
   if (error || !data) {
-    return { error: mapSaveError(error?.message), success: false };
+    const detail = [error?.message, error?.details, error?.hint]
+      .filter(Boolean)
+      .join(" — ");
+    if (process.env.NODE_ENV !== "production" && detail) {
+      console.error("[saveRoutineAction]", detail);
+    }
+    return { error: mapSaveError(error?.message ?? detail), success: false };
   }
 
   revalidatePath("/app/routines");
   revalidatePath(`/app/routines/${data}`);
-  redirect(`/app/routines/${data}`);
+
+  // Creating a new routine → open the editor. Updating in-place returns success
+  // instead of redirecting to the same URL (avoids a confusing soft failure).
+  if (!parsed.data.id) {
+    redirect(`/app/routines/${data}`);
+  }
+
+  return { error: null, success: true };
 }
 
 export async function duplicateRoutineAction(

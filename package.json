@@ -21,8 +21,11 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.99",
+    "@ai-sdk/openai": "^4.0.111",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.0",
+    "ai": "^7.0.165",
     "next": "16.4.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",

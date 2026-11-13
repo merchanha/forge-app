@@ -8,7 +8,8 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - Domain/feature-oriented folders; introduce feature modules when functionality exists.
 - Historical workouts: **JSONB routine snapshot on session start**.
 - Workout format schemas: all supported formats validated early; live timer UX ships in waves (AMRAP, For Time, Strength, Custom first).
-- AI Coach and notifications are out of MVP until explicitly approved.
+- Notifications remain out of MVP until explicitly approved.
+- AI Coach enters in Phase 9 (provider-agnostic via Vercel AI SDK).
 
 ## Product decisions (Phase 0 approval)
 
@@ -108,3 +109,14 @@ Recorded when Phase 0 was approved. Update this file when product/architecture d
 - Builder / live session / review hide the mobile tab bar.
 - Running builder uses segment rows (distance/time, target pace /km, HR zone, repeats), run-segment presets, and persisted more-options (`objective`, `equipment`/`surface`, `scaling`/`HR zones`, `effort_rpe`).
 - Session snapshots use `snapshotVersion: 2` and keep optional fields for older snapshots.
+
+## Phase 9 engineering
+
+- AI Coach lives in `src/features/ai-coach` and `/app/ai-coach`. Reuse routines public validation/actions only; do not import another feature’s internals.
+- Provider-agnostic via the Vercel AI SDK (`ai` + `@ai-sdk/openai` / `@ai-sdk/anthropic`). Select vendor with `AI_COACH_PROVIDER` (`stub` | `openai` | `anthropic`). Keys stay server-side.
+- Default local/CI path is `stub` (no API key). OpenAI/Anthropic require their API keys and optional `AI_COACH_MODEL`.
+- Model output is untrusted: parse → normalize format configs → Zod routine rules. Chat is session-only (no persisted threads).
+- Explicit confirm before `save_routine` persists immediately and lands on My Training (`/app/routines`). Edit prefills `/app/routines/new` from a session-stored draft for changes before first save; the builder’s Save is only for create/edit, not a second confirm after AI save.
+- Prompt context includes profile prefs (goal, disciplines, experience, units, target event), recent routine names/categories, and exercise library names — no email/password or other unnecessary PII.
+- Rate limit: 10 requests / user / UTC day (`ai_coach_usage` + `consume_ai_coach_request`). Soft cost controls: `AI_COACH_MAX_OUTPUT_TOKENS` (default 2500) and request timeout (default 30s).
+- AI Coach is the 5th primary nav tab (mobile + desktop). Google OAuth and notifications stay out.

@@ -170,6 +170,25 @@ Run this after Phase 1–6 versions are recorded and `20261107160000_explore_cat
 3. As User B, confirm B sees the same catalog, B’s Save creates B-owned routines only, and B cannot read A’s copied routine.
 4. Sign out; confirm `/app/explore` redirects to `/login`.
 
+## AI Coach (Phase 9)
+
+| Policy | Intent |
+|---|---|
+| `ai_coach_usage_select_own` | Authenticated user can read only their usage rows |
+| `ai_coach_usage_insert_own` | Inserts must set `user_id` to `auth.uid()` |
+| `ai_coach_usage_update_own` | Updates stay on the owner’s row |
+
+`consume_ai_coach_request(daily_limit, token_estimate)` is `security invoker`, executable by `authenticated` only, and always uses `auth.uid()` for ownership. Chat messages are not persisted. AI drafts only become routines after explicit confirm via `save_routine` (owner-scoped). Provider API keys must never appear in `NEXT_PUBLIC_*` or client bundles.
+
+## Manual two-user test — AI Coach
+
+Run this after Phase 1–8 versions are recorded and `20261108140000_ai_coach.sql` has been applied once. Do not re-apply earlier migrations.
+
+1. Sign in as User A. Open `/app/ai-coach`, send a prompt (stub or configured provider), review a draft, and Save to My Training. Confirm a private routine appears and that nothing was saved before confirm.
+2. Exhaust the daily limit (or temporarily set `AI_COACH_DAILY_LIMIT=1`) and confirm further asks are rejected with a safe error.
+3. As User B, confirm B cannot select A’s `ai_coach_usage` rows (0 rows), and B’s Save creates B-owned routines only.
+4. Sign out; confirm `/app/ai-coach` redirects to `/login`.
+
 ## Session rules
 
 - Never put the service role key in client bundles or `NEXT_PUBLIC_*`.

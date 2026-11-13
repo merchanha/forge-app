@@ -490,6 +490,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      ai_coach_usage: {
+        Row: {
+          user_id: string;
+          usage_day: string;
+          request_count: number;
+          token_estimate: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          usage_day: string;
+          request_count?: number;
+          token_estimate?: number;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          usage_day?: string;
+          request_count?: number;
+          token_estimate?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -504,6 +528,10 @@ export type Database = {
       copy_explore_template: {
         Args: { template_id: string };
         Returns: string;
+      };
+      consume_ai_coach_request: {
+        Args: { p_daily_limit?: number; p_token_estimate?: number };
+        Returns: number;
       };
     };
     Enums: {
